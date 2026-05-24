@@ -1,16 +1,22 @@
 import { db } from "@/db";
 import { posts } from "@/db/schema";
+import { desc } from "drizzle-orm";
 import ReactMarkdown from "react-markdown";
 
 export default async function Home() {
-  const [post] = await db.select().from(posts);
+  const allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
 
   return (
-    <div className="flex min-h-svh items-center justify-center p-8">
-      <article className="prose max-w-2xl">
-        <h1>{post.title}</h1>
-        <ReactMarkdown>{post.content}</ReactMarkdown>
-      </article>
-    </div>
+    <main className="min-h-svh p-8 flex justify-center">
+      <div className="w-full max-w-2xl space-y-12">
+        {allPosts.map((post) => (
+          <article key={post.id} className="prose">
+            <h1>{post.title}</h1>
+            <p>{post.createdAt.toLocaleDateString("ko-KR")}</p>
+            <ReactMarkdown>{post.content}</ReactMarkdown>
+          </article>
+        ))}
+      </div>
+    </main>
   );
 }
