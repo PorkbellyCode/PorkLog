@@ -45,3 +45,9 @@ export async function createPost(input: {
     revalidatePath("/admin");
     redirect("/admin");
 }
+
+export async function deletePost(id: number): Promise<void> {
+    await db.delete(posts).where(eq(posts.id, id));
+    revalidatePath("/");
+    revalidatePath("/admin");
+}

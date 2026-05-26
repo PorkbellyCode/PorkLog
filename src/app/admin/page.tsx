@@ -1,6 +1,19 @@
+import { db } from '@/db';
+import { posts } from '@/db/schema';
+import { desc } from 'drizzle-orm';
 import Link from 'next/link';
+import DeletePostButton from '@/components/delete-post-button';
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  const allPosts = await db.select({
+    id: posts.id,
+    slug: posts.slug,
+    title: posts.title,
+    createdAt: posts.createdAt,
+  })
+  .from(posts)
+  .orderBy(desc(posts.createdAt));
+
   return (
     <main className="min-h-svh p-8 flex justify-center">
       <div className="w-full max-w-2xl space-y-4">
@@ -11,6 +24,27 @@ export default function AdminPage() {
         >
           새 글 작성
         </Link>
+        <ul className="space-y-4">
+          {allPosts.map((post) => (
+            <li 
+              key={post.id}
+              className="flex items-center justify-between border-b border-border pb-3"
+            >
+              <div>
+                <Link
+                  href={`/posts/${post.slug}`}
+                  className="font-medium hover:underline"
+                >
+                  {post.title}
+                </Link>
+                <time className="ml-2 text-sm text-muted-foreground">
+                  {post.createdAt.toLocaleDateString("ko-KR")}
+                </time>
+              </div>
+              <DeletePostButton id={post.id} />
+            </li>
+          ))}
+        </ul>
       </div>
     </main>
   );
