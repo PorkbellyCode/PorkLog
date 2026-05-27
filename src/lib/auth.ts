@@ -3,16 +3,20 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import { user, session, account, verification } from "@/db/auth-schema";
 
-// BETTER_AUTH_SECRET / BETTER_AUTH_URL 은 betterAuth 가 환경변수에서 자동으로 읽습니다.
 export const auth = betterAuth({
+  // 로컬·프로덕션·Vercel 프리뷰를 모두 허용한다.
+  // 요청 호스트를 allowedHosts 와 대조해 요청별 base URL 을 구성하므로
+  // 배포마다 BETTER_AUTH_URL 을 바꿀 필요가 없다.
+  baseURL: {
+    allowedHosts: ["localhost:3000", "*.vercel.app"],
+    protocol: process.env.NODE_ENV === "development" ? "http" : "https",
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: { user, session, account, verification },
   }),
   emailAndPassword: {
     enabled: true,
-    // 단일 관리자 구조: 인프라(로그인/세션)는 유지하되 외부 회원가입만 차단.
-    // 방명록/친구 가입을 열 때 이 줄을 false 로 바꾸면 됩니다.
     disableSignUp: true,
   },
 });
