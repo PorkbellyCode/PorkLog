@@ -41,7 +41,15 @@ export default async function AdminPage() {
                   {post.createdAt.toLocaleDateString("ko-KR")}
                 </time>
               </div>
-              <DeletePostButton id={post.id} />
+              <div className="flex items-center gap-4">
+                <Link
+                  href={`/admin/edit/${post.id}`}
+                  className="text-sm hover:underline"
+                >
+                  수정
+                </Link>
+                <DeletePostButton id={post.id} />
+              </div>
             </li>
           ))}
         </ul>

@@ -1,77 +1,97 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createPost, type CreatePostState } from "@/lib/post-actions";
+import { createPost, updatePost, type PostFormState, } from "@/lib/post-actions";
 import MarkdownEditor from "@/components/markdown-editor";
-import { map } from "zod";
 
-export default function PostForm() {
-    const [title, setTitle] = useState("");
-    const [slug, setSlug] = useState("");
-    const [content, setContent] = useState("");
-    const [state, setState] = useState<CreatePostState>({});
-    const [isPending, startTransition] = useTransition();
+type PostFormProps = {
+  // 수정 모드일 때만 전달된다. 없으면 작성 모드.
+  post?: {
+    id: number;
+    title: string;
+    slug: string;
+    content: string;
+  };
+};
+export default function PostForm({ post }: PostFormProps) {
+  const isEdit = post !== undefined;
 
-    function handleSubmit() { 
-        startTransition(async () => {
-            const result = await createPost({ title, slug, content });
-            // 성공 시 서버 액션이 redirect한다.
-            // 만약 돌아왔다면, 검증 실패 또는 slug 중복 case 이므로 에러를 보여준다.
-            setState(result);
-        });
-    }
+  const [title, setTitle] = useState(post?.title ?? "");
+  const [slug, setSlug] = useState(post?.slug ?? "");
+  const [content, setContent] = useState(post?.content ?? "");
+  const [state, setState] = useState<PostFormState>({});
+  const [isPending, startTransition] = useTransition();
 
-    const fieldErrors = state.fieldErrors || {};
+  function handleSubmit() {
+    startTransition(async () => {
+      const result = isEdit
+        ? await updatePost(post.id, { title, slug, content })
+        : await createPost({ title, slug, content });
+      // 성공 시 서버 액션이 redirect 하므로 여기로 돌아오지 않는다.
+      // 돌아왔다면 검증 실패 또는 slug 중복이다.
+      setState(result);
+    });
+  }
 
-    return (
-        <div className="w-full max-w-2xl space-y-4">
-            <h1 className="text-xl font-semibold">새 글 작성</h1>
+  const fieldErrors = state.fieldErrors ?? {};
 
-            <div className="space-y-1">
-                <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="제목"
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-                {fieldErrors.title?.map((msg) => (
-                    <p key={msg} className="text-sm text-destructive">{msg}</p>
-                ))}
-            </div>
+  return (
+    <div className="w-full max-w-2xl space-y-4">
+      <h1 className="text-xl font-semibold">
+        {isEdit ? "글 수정" : "새 글 작성"}
+      </h1>
 
-            <div className="space-y-1">
-                <input
-                    type="text"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    placeholder="slug (예 : my-first-post)"
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                />
-                {fieldErrors.slug?.map((msg) => (
-                    <p key={msg} className="text-sm text-destructive">{msg}</p>
-                ))}
-            </div>
+      <div className="space-y-1">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="제목"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+        {fieldErrors.title?.map((msg) => (
+          <p key={msg} className="text-sm text-destructive">
+            {msg}
+          </p>
+        ))}
+      </div>
 
-            <div className="space-y-1">
-                <MarkdownEditor value={content} onChange={setContent} />
-                {fieldErrors.content?.map((msg) => (
-                    <p key={msg} className="text-sm text-destructive">{msg}</p>
-                ))}
-            </div>
+      <div className="space-y-1">
+        <input
+          type="text"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          placeholder="slug (예: my-first-post)"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        />
+        {fieldErrors.slug?.map((msg) => (
+          <p key={msg} className="text-sm text-destructive">
+            {msg}
+          </p>
+        ))}
+      </div>
 
-            {state.formError && (
-                <p className="text-sm text-destructive">{state.formError}</p>
-            )}
+      <div className="space-y-1">
+        <MarkdownEditor value={content} onChange={setContent} />
+        {fieldErrors.content?.map((msg) => (
+          <p key={msg} className="text-sm text-destructive">
+            {msg}
+          </p>
+        ))}
+      </div>
 
-            <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isPending}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            >
-                {isPending ? "저장 중..." : "저장"}
-            </button>
-        </div>
-    );
+      {state.formError && (
+        <p className="text-sm text-destructive">{state.formError}</p>
+      )}
+
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={isPending}
+        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+      >
+        {isPending ? "저장 중…" : isEdit ? "수정 완료" : "발행"}
+      </button>
+    </div>
+  );
 }
