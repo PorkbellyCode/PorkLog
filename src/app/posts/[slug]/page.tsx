@@ -7,6 +7,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
+import Comments from "@/components/comments";
 
 async function renderMarkdown(markdown: string): Promise<string> {
   const file = await unified()
@@ -35,11 +36,16 @@ export default async function PostPage({
 
   return (
     <main className="min-h-svh p-8 flex justify-center">
-      <article className="prose max-w-2xl">
-        <h1>{post.title}</h1>
-        <p>{post.createdAt.toLocaleDateString("ko-KR")}</p>
-        <div dangerouslySetInnerHTML={{ __html: html }} />
-      </article>
+      <div className="w-full max-w-2xl">
+        <article className="prose max-w-none">
+          <h1>{post.title}</h1>
+          <p>{post.createdAt.toLocaleDateString("ko-KR")}</p>
+          <div dangerouslySetInnerHTML={{ __html: html }} />
+        </article>
+        <div className="mt-12">
+          <Comments />
+        </div>
+      </div>
     </main>
   );
 }
