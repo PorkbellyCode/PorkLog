@@ -20,6 +20,7 @@ export async function createPost(input: {
     title: string;
     slug: string;
     content: string;
+    category: string;
 }): Promise<PostFormState> {
     const parsed = postInputSchema.safeParse(input);
 
@@ -27,7 +28,7 @@ export async function createPost(input: {
         return { fieldErrors: z.flattenError(parsed.error).fieldErrors }
     }
 
-    const { title, slug, content } = parsed.data;
+    const { title, slug, content, category } = parsed.data;
 
     // slug 중복 사전 확인. (UNIQUE 제약이 최종 방어선이지만, 사용자 친화적인 메시지를 위해 미리 조회한다.)
     const [existing] = await db
@@ -39,7 +40,7 @@ export async function createPost(input: {
         return { formError: "이미 사용 중인 slug입니다." }
     }
 
-    await db.insert(posts).values({ title, slug, content });
+    await db.insert(posts).values({ title, slug, content, category });
 
     // 새 글이 생성되면 목록 페이지를 리프레시한다.
     revalidatePath("/");
@@ -50,7 +51,7 @@ export async function createPost(input: {
 // 게시글 수정 액션. 클라이언트에서 호출되며, 서버에서 실행된다.
 export async function updatePost(
   id: number,
-  input: { title: string; slug: string; content: string },
+  input: { title: string; slug: string; content: string; category: string },
 ): Promise<PostFormState> {
   const parsed = postInputSchema.safeParse(input);
 
@@ -58,7 +59,7 @@ export async function updatePost(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content } = parsed.data;
+  const { title, slug, content, category } = parsed.data;
 
   // slug 중복 확인 시 자기 자신(id)은 제외한다.
   // (slug 를 그대로 두고 제목·본문만 고치는 경우를 허용하기 위함.)
@@ -73,7 +74,7 @@ export async function updatePost(
 
   await db
     .update(posts)
-    .set({ title, slug, content })
+    .set({ title, slug, content, category })
     .where(eq(posts.id, id));
 
   revalidatePath("/");

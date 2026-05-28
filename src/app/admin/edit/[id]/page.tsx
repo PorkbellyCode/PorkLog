@@ -29,6 +29,7 @@ export default async function EditPostPage({
           title: post.title,
           slug: post.slug,
           content: post.content,
+          category: post.category,
         }}
       />
     </main>

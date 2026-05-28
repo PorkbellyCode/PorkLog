@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { createPost, updatePost, type PostFormState, } from "@/lib/post-actions";
 import MarkdownEditor from "@/components/markdown-editor";
+import { CATEGORIES, DEFAULT_CATEGORY } from "@/lib/categories";
 
 type PostFormProps = {
   // 수정 모드일 때만 전달된다. 없으면 작성 모드.
@@ -11,6 +12,7 @@ type PostFormProps = {
     title: string;
     slug: string;
     content: string;
+    category: string;
   };
 };
 export default function PostForm({ post }: PostFormProps) {
@@ -19,14 +21,15 @@ export default function PostForm({ post }: PostFormProps) {
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [content, setContent] = useState(post?.content ?? "");
+  const [category, setCategory] = useState(post?.category ?? DEFAULT_CATEGORY);
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit() {
     startTransition(async () => {
       const result = isEdit
-        ? await updatePost(post.id, { title, slug, content })
-        : await createPost({ title, slug, content });
+        ? await updatePost(post.id, { title, slug, content, category })
+        : await createPost({ title, slug, content, category });
       // 성공 시 서버 액션이 redirect 하므로 여기로 돌아오지 않는다.
       // 돌아왔다면 검증 실패 또는 slug 중복이다.
       setState(result);
@@ -65,6 +68,25 @@ export default function PostForm({ post }: PostFormProps) {
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         {fieldErrors.slug?.map((msg) => (
+          <p key={msg} className="text-sm text-destructive">
+            {msg}
+          </p>
+        ))}
+      </div>
+
+      <div className="space-y-1">
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+        >
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+        {fieldErrors.category?.map((msg) => (
           <p key={msg} className="text-sm text-destructive">
             {msg}
           </p>
