@@ -5,6 +5,6 @@ export const posts = pgTable('posts', {
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
   content: text('content').notNull(),
-  category: text('category').notNull().default('일상'),
+  category: text('category').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

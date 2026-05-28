@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createPost, updatePost, type PostFormState, } from "@/lib/post-actions";
+import {
+  createPost,
+  updatePost,
+  type PostFormState,
+} from "@/lib/post-actions";
 import MarkdownEditor from "@/components/markdown-editor";
-import { CATEGORIES, DEFAULT_CATEGORY } from "@/lib/categories";
+import { CATEGORIES } from "@/lib/categories";
 
 type PostFormProps = {
   // 수정 모드일 때만 전달된다. 없으면 작성 모드.
@@ -15,13 +19,15 @@ type PostFormProps = {
     category: string;
   };
 };
+
 export default function PostForm({ post }: PostFormProps) {
   const isEdit = post !== undefined;
 
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [content, setContent] = useState(post?.content ?? "");
-  const [category, setCategory] = useState(post?.category ?? DEFAULT_CATEGORY);
+  // 작성 모드는 미선택("")으로 시작 → 사용자가 반드시 선택해야 한다.
+  const [category, setCategory] = useState<string>(post?.category ?? "");
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
 
@@ -80,9 +86,12 @@ export default function PostForm({ post }: PostFormProps) {
           onChange={(e) => setCategory(e.target.value)}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
+          <option value="" disabled>
+            카테고리 선택
+          </option>
           {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
+            <option key={c.key} value={c.key}>
+              {c.label}
             </option>
           ))}
         </select>
