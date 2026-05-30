@@ -3,10 +3,6 @@
 import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 
-// mounted 여부를 useSyncExternalStore 로 표현.
-// - 서버 / 첫 클라이언트 렌더: getServerSnapshot() => false
-// - 마운트 후 클라이언트 렌더: getSnapshot() => true
-// 이로써 hydration mismatch 없이, useEffect+setState 없이 "마운트 가드"를 만든다.
 function useMounted(): boolean {
   return useSyncExternalStore(
     () => () => {},
@@ -15,17 +11,17 @@ function useMounted(): boolean {
   );
 }
 
+// 헤더 안에 들어가는 형태. 어두운 헤더 톤에 맞춰 반투명 hover.
 export default function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useMounted();
 
-  // 자리 차지를 위한 동일 크기 플레이스홀더
   if (!mounted) {
     return (
       <button
         type="button"
         aria-label="테마 전환"
-        className="fixed top-4 right-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-md border border-default bg-subtle"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/70"
       />
     );
   }
@@ -37,7 +33,7 @@ export default function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "라이트 모드로 전환" : "다크 모드로 전환"}
-      className="fixed top-4 right-4 z-50 inline-flex h-9 w-9 items-center justify-center rounded-md border border-default bg-subtle text-default hover:bg-muted transition-colors"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white transition-colors"
     >
       {isDark ? (
         <svg
