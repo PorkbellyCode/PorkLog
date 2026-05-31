@@ -1,5 +1,7 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import HeaderSearch from "@/components/header-search";
+import SearchBar from "@/components/search-bar";
 import ThemeToggle from "@/components/theme-toggle";
 
 // GitHub 스타일: 라이트/다크 무관하게 항상 어두운 헤더, sticky.
@@ -15,7 +17,9 @@ export default function Header() {
         </Link>
 
         <div className="flex items-center gap-2">
-          <HeaderSearch />
+          <Suspense fallback={<SearchBar initialQuery="" />}>
+            <HeaderSearch />
+          </Suspense>
           <ThemeToggle />
         </div>
       </div>
