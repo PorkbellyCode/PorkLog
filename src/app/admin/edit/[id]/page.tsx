@@ -30,6 +30,7 @@ export default async function EditPostPage({
           slug: post.slug,
           content: post.content,
           category: post.category,
+          thumbnail: post.thumbnail,
         }}
       />
     </main>

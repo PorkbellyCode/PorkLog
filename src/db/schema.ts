@@ -6,5 +6,6 @@ export const posts = pgTable('posts', {
   title: text('title').notNull(),
   content: text('content').notNull(),
   category: text('category').notNull(),
+  thumbnail: text('thumbnail'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

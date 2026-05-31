@@ -8,6 +8,7 @@ import remarkRehype from "remark-rehype";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import Comments from "@/components/comments";
+import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 
 async function renderMarkdown(markdown: string): Promise<string> {
   const file = await unified()
@@ -33,15 +34,37 @@ export default async function PostPage({
   if (!post) notFound();
 
   const html = await renderMarkdown(post.content);
+  const heroSrc = post.thumbnail ?? defaultThumbnail(post.category);
 
   return (
-    <main className="min-h-svh p-8 flex justify-center">
-      <div className="w-full max-w-2xl">
+    <main className="px-4 py-8 sm:py-12">
+      <div className="mx-auto w-full max-w-3xl">
+        {/* 히어로 영역: 썸네일(또는 카테고리 기본) */}
+        <div className="mb-8 overflow-hidden rounded-lg border border-border-default">
+          <div className="aspect-video">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroSrc}
+              alt={post.title}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </div>
+
+        <header className="mb-8 space-y-3">
+          <p className="text-sm text-fg-muted">
+            {categoryLabel(post.category)} ·{" "}
+            {post.createdAt.toLocaleDateString("ko-KR")}
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-bold text-fg-default">
+            {post.title}
+          </h1>
+        </header>
+
         <article className="prose max-w-none">
-          <h1>{post.title}</h1>
-          <p>{post.createdAt.toLocaleDateString("ko-KR")}</p>
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </article>
+
         <div className="mt-12">
           <Comments />
         </div>

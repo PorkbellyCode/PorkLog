@@ -10,13 +10,13 @@ import MarkdownEditor from "@/components/markdown-editor";
 import { CATEGORIES } from "@/lib/categories";
 
 type PostFormProps = {
-  // 수정 모드일 때만 전달된다. 없으면 작성 모드.
   post?: {
     id: number;
     title: string;
     slug: string;
     content: string;
     category: string;
+    thumbnail: string | null;
   };
 };
 
@@ -26,18 +26,54 @@ export default function PostForm({ post }: PostFormProps) {
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
   const [content, setContent] = useState(post?.content ?? "");
-  // 작성 모드는 미선택("")으로 시작 → 사용자가 반드시 선택해야 한다.
   const [category, setCategory] = useState<string>(post?.category ?? "");
+  const [thumbnail, setThumbnail] = useState<string | null>(
+    post?.thumbnail ?? null,
+  );
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
 
+  async function handleThumbnailChange(
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setThumbnailError(null);
+    setUploading(true);
+    try {
+      const res = await fetch(
+        `/api/admin/upload?filename=${encodeURIComponent(file.name)}`,
+        {
+          method: "POST",
+          headers: { "content-type": file.type },
+          body: file,
+        },
+      );
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "" }));
+        throw new Error(error || "업로드에 실패했습니다.");
+      }
+      const { url } = (await res.json()) as { url: string };
+      setThumbnail(url);
+    } catch (err) {
+      setThumbnailError(
+        err instanceof Error ? err.message : "업로드에 실패했습니다.",
+      );
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
   function handleSubmit() {
     startTransition(async () => {
+      const payload = { title, slug, content, category, thumbnail };
       const result = isEdit
-        ? await updatePost(post.id, { title, slug, content, category })
-        : await createPost({ title, slug, content, category });
-      // 성공 시 서버 액션이 redirect 하므로 여기로 돌아오지 않는다.
-      // 돌아왔다면 검증 실패 또는 slug 중복이다.
+        ? await updatePost(post.id, payload)
+        : await createPost(payload);
       setState(result);
     });
   }
@@ -59,9 +95,7 @@ export default function PostForm({ post }: PostFormProps) {
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         {fieldErrors.title?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">
-            {msg}
-          </p>
+          <p key={msg} className="text-sm text-destructive">{msg}</p>
         ))}
       </div>
 
@@ -74,9 +108,7 @@ export default function PostForm({ post }: PostFormProps) {
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         {fieldErrors.slug?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">
-            {msg}
-          </p>
+          <p key={msg} className="text-sm text-destructive">{msg}</p>
         ))}
       </div>
 
@@ -86,28 +118,52 @@ export default function PostForm({ post }: PostFormProps) {
           onChange={(e) => setCategory(e.target.value)}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
         >
-          <option value="" disabled>
-            카테고리 선택
-          </option>
+          <option value="" disabled>카테고리 선택</option>
           {CATEGORIES.map((c) => (
-            <option key={c.key} value={c.key}>
-              {c.label}
-            </option>
+            <option key={c.key} value={c.key}>{c.label}</option>
           ))}
         </select>
         {fieldErrors.category?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">
-            {msg}
-          </p>
+          <p key={msg} className="text-sm text-destructive">{msg}</p>
+        ))}
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium">썸네일 (선택)</label>
+        {thumbnail && (
+          <div className="flex items-start gap-3">
+            <img
+              src={thumbnail}
+              alt="썸네일 미리보기"
+              className="h-24 w-24 rounded-md object-cover border border-input"
+            />
+            <button
+              type="button"
+              onClick={() => setThumbnail(null)}
+              className="text-sm text-destructive hover:underline"
+            >
+              제거
+            </button>
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleThumbnailChange}
+          disabled={uploading}
+          className="block w-full text-sm"
+        />
+        {uploading && <p className="text-sm text-muted-foreground">업로드 중…</p>}
+        {thumbnailError && <p className="text-sm text-destructive">{thumbnailError}</p>}
+        {fieldErrors.thumbnail?.map((msg) => (
+          <p key={msg} className="text-sm text-destructive">{msg}</p>
         ))}
       </div>
 
       <div className="space-y-1">
         <MarkdownEditor value={content} onChange={setContent} />
         {fieldErrors.content?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">
-            {msg}
-          </p>
+          <p key={msg} className="text-sm text-destructive">{msg}</p>
         ))}
       </div>
 
@@ -118,7 +174,7 @@ export default function PostForm({ post }: PostFormProps) {
       <button
         type="button"
         onClick={handleSubmit}
-        disabled={isPending}
+        disabled={isPending || uploading}
         className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
       >
         {isPending ? "저장 중…" : isEdit ? "수정 완료" : "발행"}
