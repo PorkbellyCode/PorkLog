@@ -23,7 +23,8 @@ export default function LoginPage() {
       setError(error.message ?? "로그인에 실패했습니다.");
       return;
     }
-    router.push("/admin");
+    router.push("/");
+    router.refresh();
   }
 
   return (

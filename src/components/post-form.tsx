@@ -45,7 +45,7 @@ export default function PostForm({ post }: PostFormProps) {
     setUploading(true);
     try {
       const res = await fetch(
-        `/api/admin/upload?filename=${encodeURIComponent(file.name)}`,
+        `/api/upload?filename=${encodeURIComponent(file.name)}`,
         {
           method: "POST",
           headers: { "content-type": file.type },

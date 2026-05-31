@@ -1,6 +1,8 @@
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { desc, eq, ilike, count, type SQL } from "drizzle-orm";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { CATEGORIES, isValidCategory } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import PostCard from "@/components/post-card";
@@ -17,6 +19,9 @@ export default async function Home({
   const sp = await searchParams;
   const query = sp.q?.trim() ?? "";
   const isSearching = query.length > 0;
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isAdmin = !!session;
 
   const activeCategory =
     sp.category && isValidCategory(sp.category) ? sp.category : undefined;
@@ -72,24 +77,44 @@ export default async function Home({
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-8">
-        <nav className="flex gap-4 border-b border-border-default pb-2 overflow-x-auto">
-          {tabs.map((tab) => {
-            const isActive = !isSearching && activeCategory === tab.key;
-            const href = tab.key ? `/?category=${tab.key}` : "/";
-            return (
-              <Link
-                key={tab.label}
-                href={href}
-                className={
-                  isActive
-                    ? "text-sm font-semibold text-fg-default border-b-2 border-fg-default pb-1 whitespace-nowrap"
-                    : "text-sm text-fg-muted hover:text-fg-default pb-1 whitespace-nowrap"
-                }
+        <nav className="flex items-center justify-between gap-4 border-b border-border-default pb-2">
+          <div className="flex gap-4 overflow-x-auto">
+            {tabs.map((tab) => {
+              const isActive = !isSearching && activeCategory === tab.key;
+              const href = tab.key ? `/?category=${tab.key}` : "/";
+              return (
+                <Link
+                  key={tab.label}
+                  href={href}
+                  className={
+                    isActive
+                      ? "text-sm font-semibold text-fg-default border-b-2 border-fg-default pb-1 whitespace-nowrap"
+                      : "text-sm text-fg-muted hover:text-fg-default pb-1 whitespace-nowrap"
+                  }
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </div>
+          {isAdmin && (
+            <Link
+              href="/posts/new"
+              aria-label="새 글 작성"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                width="16"
+                height="16"
+                fill="currentColor"
+                aria-hidden="true"
               >
-                {tab.label}
-              </Link>
-            );
-          })}
+                <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z" />
+              </svg>
+            </Link>
+          )}
         </nav>
 
         {isSearching && (
@@ -113,6 +138,7 @@ export default async function Home({
                     post={post}
                     preview={extractPreview(post.content)}
                     featured={featured}
+                    isAdmin={isAdmin}
                   />
                 );
               })}

@@ -1,7 +1,9 @@
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import PostForm from "@/components/post-form";
 
 export default async function EditPostPage({
@@ -9,6 +11,9 @@ export default async function EditPostPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
+
   const { id } = await params;
   const postId = Number(id);
 

@@ -7,11 +7,20 @@ import { z } from "zod";
 import { eq, and, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export type PostFormState = {
   fieldErrors?: Record<string, string[] | undefined>;
   formError?: string;
 };
+
+async function requireSession() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
+    throw new Error("unauthorized");
+  }
+}
 
 export async function createPost(input: {
   title: string;
@@ -20,6 +29,8 @@ export async function createPost(input: {
   category: string;
   thumbnail: string | null;
 }): Promise<PostFormState> {
+  await requireSession();
+
   const parsed = postInputSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -40,8 +51,7 @@ export async function createPost(input: {
   await db.insert(posts).values({ title, slug, content, category, thumbnail });
 
   revalidatePath("/");
-  revalidatePath("/admin");
-  redirect("/admin");
+  redirect("/");
 }
 
 export async function updatePost(
@@ -54,6 +64,8 @@ export async function updatePost(
     thumbnail: string | null;
   },
 ): Promise<PostFormState> {
+  await requireSession();
+
   const parsed = postInputSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -77,14 +89,14 @@ export async function updatePost(
     .where(eq(posts.id, id));
 
   revalidatePath("/");
-  revalidatePath("/admin");
   revalidatePath(`/posts/${slug}`);
-  redirect("/admin");
+  redirect(`/posts/${slug}`);
 }
 
 export async function deletePost(id: number): Promise<void> {
+  await requireSession();
+
   await db.delete(posts).where(eq(posts.id, id));
 
   revalidatePath("/");
-  revalidatePath("/admin");
 }

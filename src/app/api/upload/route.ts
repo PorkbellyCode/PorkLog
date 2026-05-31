@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-// 어드민 보호: 세션이 없으면 업로드 거부.
-async function ensureAdmin() {
+// 로그인 사용자(=관리자)만 업로드 허용.
+async function ensureAuthed() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -16,7 +16,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_SIZE_BYTES = 4 * 1024 * 1024; // 4MB
 
 export async function POST(request: Request): Promise<NextResponse> {
-  const unauth = await ensureAdmin();
+  const unauth = await ensureAuthed();
   if (unauth) return unauth;
 
   const { searchParams } = new URL(request.url);
