@@ -4,15 +4,18 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 
+
 async function renderMarkdown(markdown: string): Promise<string> {
   const file = await unified()
     .use(remarkParse)
+    .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypePrettyCode, { theme: "github-dark" })
     .use(rehypeStringify)
