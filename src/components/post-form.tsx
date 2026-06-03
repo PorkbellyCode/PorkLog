@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   createPost,
   updatePost,
@@ -32,15 +32,13 @@ export default function PostForm({ post }: PostFormProps) {
   );
   const [thumbnailError, setThumbnailError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  async function handleThumbnailChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  // input(파일 선택) 과 드래그앤드롭이 공유하는 업로드 로직.
+  async function uploadThumbnail(file: File) {
     setThumbnailError(null);
     setUploading(true);
     try {
@@ -64,8 +62,21 @@ export default function PostForm({ post }: PostFormProps) {
       );
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
+  }
+
+  function handleThumbnailChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) void uploadThumbnail(file);
+    e.target.value = ""; // 같은 파일 다시 선택해도 onChange 가 발火하도록 초기화
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false);
+    if (uploading) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) void uploadThumbnail(file);
   }
 
   function handleSubmit() {
@@ -80,104 +91,156 @@ export default function PostForm({ post }: PostFormProps) {
 
   const fieldErrors = state.fieldErrors ?? {};
 
+  const inputClass =
+    "w-full h-11 rounded-md border border-border-default bg-bg-default px-3 text-sm text-fg-default placeholder:text-fg-muted focus:border-accent-fg focus:outline-none focus:ring-2 focus:ring-accent-fg/30 transition-colors";
+
   return (
     <div className="w-full max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold">
+      <h1 className="text-xl font-semibold text-fg-default">
         {isEdit ? "글 수정" : "새 글 작성"}
       </h1>
 
       <div className="space-y-1">
+        <label className="block text-sm font-medium text-fg-default">
+          제목 <span className="text-danger-fg">*</span>
+        </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="제목"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className={inputClass}
         />
         {fieldErrors.title?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">{msg}</p>
+          <p key={msg} className="text-sm text-danger-fg">{msg}</p>
         ))}
       </div>
 
-      <div className="space-y-1">
-        <input
-          type="text"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder="slug (예: my-first-post)"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        />
-        {fieldErrors.slug?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">{msg}</p>
-        ))}
-      </div>
-
-      <div className="space-y-1">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        >
-          <option value="" disabled>카테고리 선택</option>
-          {CATEGORIES.map((c) => (
-            <option key={c.key} value={c.key}>{c.label}</option>
+      {/* 슬러그 + 카테고리: 모바일 1열, sm 이상 2열 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-fg-default">
+            슬러그 <span className="text-danger-fg">*</span>
+          </label>
+          <input
+            type="text"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="slug (예: my-first-post)"
+            className={inputClass}
+          />
+          {fieldErrors.slug?.map((msg) => (
+            <p key={msg} className="text-sm text-danger-fg">{msg}</p>
           ))}
-        </select>
-        {fieldErrors.category?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">{msg}</p>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-fg-default">
+            카테고리 <span className="text-danger-fg">*</span>
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={inputClass}
+          >
+            <option value="" disabled>카테고리 선택</option>
+            {CATEGORIES.map((c) => (
+              <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
+          {fieldErrors.category?.map((msg) => (
+            <p key={msg} className="text-sm text-danger-fg">{msg}</p>
+          ))}
+        </div>
+      </div>
+
+      {/* 본문: 화면의 주 영역 */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-fg-default">
+          본문 <span className="text-danger-fg">*</span>
+        </label>
+        <MarkdownEditor value={content} onChange={setContent} />
+        {fieldErrors.content?.map((msg) => (
+          <p key={msg} className="text-sm text-danger-fg">{msg}</p>
         ))}
       </div>
 
+      {/* 썸네일: 본문 아래로 이동 */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium">썸네일 (선택)</label>
+        <label className="block text-sm font-medium text-fg-default">썸네일</label>
+
         {thumbnail && (
           <div className="flex items-start gap-3">
             <img
               src={thumbnail}
               alt="썸네일 미리보기"
-              className="h-24 w-24 rounded-md object-cover border border-input"
+              className="h-24 w-24 rounded-md object-cover border border-border-default"
             />
             <button
               type="button"
               onClick={() => setThumbnail(null)}
-              className="text-sm text-destructive hover:underline"
+              className="text-sm text-danger-fg hover:underline"
             >
               제거
             </button>
           </div>
         )}
-        <input
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          onChange={handleThumbnailChange}
-          disabled={uploading}
-          className="block w-full text-sm"
-        />
-        {uploading && <p className="text-sm text-muted-foreground">업로드 중…</p>}
-        {thumbnailError && <p className="text-sm text-destructive">{thumbnailError}</p>}
-        {fieldErrors.thumbnail?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">{msg}</p>
-        ))}
-      </div>
 
-      <div className="space-y-1">
-        <MarkdownEditor value={content} onChange={setContent} />
-        {fieldErrors.content?.map((msg) => (
-          <p key={msg} className="text-sm text-destructive">{msg}</p>
+        <div
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!uploading) setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={
+            "flex flex-col items-center justify-center gap-2 rounded-md border border-dashed px-4 py-8 text-center transition-colors " +
+            (isDragging
+              ? "border-accent-fg bg-accent-fg/5"
+              : "border-border-default bg-bg-subtle")
+          }
+        >
+          <p className="text-sm text-fg-muted">
+            {thumbnail
+              ? "다른 이미지로 교체하려면 여기에 드래그"
+              : "이미지를 여기로 드래그하세요"}
+          </p>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="rounded-md border border-border-default bg-bg-default px-3 py-1.5 text-sm font-medium text-fg-default hover:bg-fg-default/5 disabled:opacity-50 transition-colors"
+          >
+            파일 선택
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={handleThumbnailChange}
+            disabled={uploading}
+            className="hidden"
+          />
+        </div>
+
+        {uploading && <p className="text-sm text-fg-muted">업로드 중…</p>}
+        {thumbnailError && <p className="text-sm text-danger-fg">{thumbnailError}</p>}
+        {fieldErrors.thumbnail?.map((msg) => (
+          <p key={msg} className="text-sm text-danger-fg">{msg}</p>
         ))}
       </div>
 
       {state.formError && (
-        <p className="text-sm text-destructive">{state.formError}</p>
+        <p className="text-sm text-danger-fg">{state.formError}</p>
       )}
 
       <button
         type="button"
         onClick={handleSubmit}
         disabled={isPending || uploading}
-        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        className="rounded-md bg-accent-fg px-4 py-2 text-sm font-medium text-white hover:bg-accent-fg/90 disabled:opacity-50 transition-colors"
       >
-        {isPending ? "저장 중…" : isEdit ? "수정 완료" : "발행"}
+        {isPending ? "저장 중…" : "저장"}
       </button>
     </div>
   );
