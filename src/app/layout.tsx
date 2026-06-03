@@ -4,8 +4,9 @@ import Header from "@/components/header";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://pork-log.vercel.app"),
   title: "PorkLog",
-  description: "개발자의 잡다한 기록",
+  description: "나를 기록하는 공간",
 };
 
 export default function RootLayout({

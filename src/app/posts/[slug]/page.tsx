@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,7 +12,14 @@ import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
 import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
+import { extractPreview } from "@/lib/post-preview";
 
+// generateMetadata 와 PostPage 가 같은 글을 공유 조회하도록 cache 로 감싼다.
+// 한 요청 안에서 같은 slug 호출은 DB 왕복 1회로 합쳐진다.
+const getPost = cache(async (slug: string) => {
+  const [post] = await db.select().from(posts).where(eq(posts.slug, slug));
+  return post ?? null;
+});
 
 async function renderMarkdown(markdown: string): Promise<string> {
   const file = await unified()
@@ -23,16 +32,32 @@ async function renderMarkdown(markdown: string): Promise<string> {
   return String(file);
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPost(slug);
+  if (!post) return {};
+
+  const image = post.thumbnail ?? defaultThumbnail(post.category);
+  const description = extractPreview(post.content);
+
+  return {
+    title: post.title,
+    description,
+    openGraph: { title: post.title, description, images: [image], type: "article" },
+  };
+}
+
 export default async function PostPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [post] = await db
-    .select()
-    .from(posts)
-    .where(eq(posts.slug, slug));
+  const post = await getPost(slug);
 
   if (!post) notFound();
 

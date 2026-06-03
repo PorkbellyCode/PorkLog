@@ -1,0 +1,35 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="7" fill="#1f2328"/>
+  <g transform="translate(16 16) rotate(-32) scale(0.78) translate(0 -2.5)">
+    <!-- 살코기 본체 (물결 스트립) -->
+    <path d="M -18 -3
+             Q -12 -5.5 -6 -3
+             Q 0 -0.5 6 -3
+             Q 12 -5.5 18 -3
+             L 18 8
+             Q 12 5.5 6 8
+             Q 0 10.5 -6 8
+             Q -12 5.5 -18 8 Z"
+          fill="#b14a3b" stroke="#7f2f24" stroke-width="1.2" stroke-linejoin="round"/>
+    <!-- 지방 줄무늬 1 -->
+    <path d="M -18 -0.5
+             Q -12 -3 -6 -0.5
+             Q 0 2 6 -0.5
+             Q 12 -3 18 -0.5
+             L 18 2
+             Q 12 -0.5 6 2
+             Q 0 4.5 -6 2
+             Q -12 -0.5 -18 2 Z"
+          fill="#f7e8d6"/>
+    <!-- 지방 줄무늬 2 -->
+    <path d="M -18 3.5
+             Q -12 1 -6 3.5
+             Q 0 6 6 3.5
+             Q 12 1 18 3.5
+             L 18 6
+             Q 12 3.5 6 6
+             Q 0 8.5 -6 6
+             Q -12 3.5 -18 6 Z"
+          fill="#f7e8d6"/>
+  </g>
+</svg>
