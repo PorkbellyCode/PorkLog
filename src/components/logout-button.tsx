@@ -21,6 +21,7 @@ export default function LogoutButton() {
       onClick={handleClick}
       disabled={isPending}
       aria-label="로그아웃"
+      title="로그아웃"
       className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
     >
       <svg

@@ -92,6 +92,7 @@ export default function PostCard({
           <Link
             href={`/posts/edit/${post.id}`}
             aria-label="수정"
+            title="수정"
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
           >
             <svg
