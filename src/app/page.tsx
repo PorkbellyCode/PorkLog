@@ -101,6 +101,7 @@ export default async function Home({
             <Link
               href="/posts/new"
               aria-label="새 글 작성"
+              title="새 글 작성"
               className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
             >
               <svg
