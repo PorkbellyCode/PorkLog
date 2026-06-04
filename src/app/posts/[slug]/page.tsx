@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
@@ -67,6 +68,18 @@ export default async function PostPage({
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-3xl">
+        <Link
+          href="/"
+          aria-label="목록으로"
+          title="목록으로"
+          className="mb-6 inline-flex shrink-0 h-9 w-9 items-center justify-center rounded-md border border-border-default bg-bg-default text-fg-default hover:bg-fg-default/5 transition-colors"
+        >
+          {/* Octicon: arrow-left */}
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7.25h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z" />
+          </svg>
+        </Link>
+
         {/* 히어로 영역: 썸네일(또는 카테고리 기본) */}
         <div className="mb-8 overflow-hidden rounded-lg border border-border-default">
           <div className="aspect-video">
