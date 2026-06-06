@@ -6,12 +6,13 @@ import { postInputSchema } from "@/lib/post-schema";
 import { z } from "zod";
 import { eq, and, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { del } from "@vercel/blob";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
 export type PostFormState = {
+  ok?: boolean;
+  slug?: string;
   fieldErrors?: Record<string, string[] | undefined>;
   formError?: string;
 };
@@ -62,7 +63,7 @@ export async function createPost(input: {
   await db.insert(posts).values({ title, slug, content, category, thumbnail });
 
   revalidatePath("/");
-  redirect("/");
+  return { ok: true };
 }
 
 export async function updatePost(
@@ -112,10 +113,10 @@ export async function updatePost(
 
   revalidatePath("/");
   revalidatePath(`/posts/${slug}`);
-  redirect(`/posts/${slug}`);
+  return { ok: true, slug };
 }
 
-export async function deletePost(id: number): Promise<void> {
+export async function deletePost(id: number): Promise<{ ok: true }> {
   await requireSession();
 
   const [existing] = await db
@@ -128,5 +129,5 @@ export async function deletePost(id: number): Promise<void> {
   await deleteThumbnailBlob(existing?.thumbnail);
 
   revalidatePath("/");
-  redirect("/");
+  return { ok: true };
 }

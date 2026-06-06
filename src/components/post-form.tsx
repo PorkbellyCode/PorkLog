@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   createPost,
   updatePost,
@@ -94,6 +95,14 @@ export default function PostForm({ post }: PostFormProps) {
       const result = isEdit
         ? await updatePost(post.id, payload)
         : await createPost(payload);
+
+      if (result.ok) {
+        toast.success(isEdit ? "글을 수정했습니다." : "글을 작성했습니다.");
+        router.push(isEdit ? `/posts/${result.slug ?? slug}` : "/");
+        router.refresh();
+        return;
+      }
+
       setState(result);
     });
   }
