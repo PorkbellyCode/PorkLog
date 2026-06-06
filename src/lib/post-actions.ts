@@ -128,4 +128,5 @@ export async function deletePost(id: number): Promise<void> {
   await deleteThumbnailBlob(existing?.thumbnail);
 
   revalidatePath("/");
+  redirect("/");
 }

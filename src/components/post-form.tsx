@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   createPost,
   updatePost,
@@ -21,6 +22,7 @@ type PostFormProps = {
 };
 
 export default function PostForm({ post }: PostFormProps) {
+  const router = useRouter();
   const isEdit = post !== undefined;
 
   const [title, setTitle] = useState(post?.title ?? "");
@@ -79,6 +81,13 @@ export default function PostForm({ post }: PostFormProps) {
     if (file) void uploadThumbnail(file);
   }
 
+  function handleBack() {
+    // 폼 화면은 보통 홈/상세에서 진입하므로 직전 화면으로 복귀.
+    // 단, history 가 없는 직진입(북마크·새 탭) 대비로 홈 폴백.
+    if (window.history.length > 1) router.back();
+    else router.push("/");
+  }
+
   function handleSubmit() {
     startTransition(async () => {
       const payload = { title, slug, content, category, thumbnail };
@@ -96,9 +105,23 @@ export default function PostForm({ post }: PostFormProps) {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
-      <h1 className="text-xl font-semibold text-fg-default">
-        {isEdit ? "글 수정" : "새 글 작성"}
-      </h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-xl font-semibold text-fg-default">
+          {isEdit ? "글 수정" : "새 글 작성"}
+        </h1>
+        <button
+          type="button"
+          onClick={handleBack}
+          aria-label="뒤로"
+          title="뒤로"
+          className="inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
+        >
+          {/* Octicon: arrow-left */}
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+            <path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7.25h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z" />
+          </svg>
+        </button>
+      </div>
 
       <div className="space-y-1">
         <label className="block text-sm font-medium text-fg-default">

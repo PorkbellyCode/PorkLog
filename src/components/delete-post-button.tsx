@@ -20,7 +20,7 @@ export default function DeletePostButton({ id }: { id: number }) {
       disabled={isPending}
       aria-label="삭제"
       title="삭제"
-      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-fg-muted hover:bg-destructive/10 hover:text-destructive transition-colors disabled:opacity-50"
+      className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-fg-muted hover:bg-danger-fg/10 hover:text-danger-fg transition-colors disabled:opacity-50"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

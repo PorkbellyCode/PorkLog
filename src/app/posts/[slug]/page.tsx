@@ -14,6 +14,9 @@ import rehypeStringify from "rehype-stringify";
 import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
+import DeletePostButton from "@/components/delete-post-button";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 // generateMetadata 와 PostPage 가 같은 글을 공유 조회하도록 cache 로 감싼다.
 // 한 요청 안에서 같은 slug 호출은 DB 왕복 1회로 합쳐진다.
@@ -62,42 +65,61 @@ export default async function PostPage({
 
   if (!post) notFound();
 
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isAdmin = !!session;
+
   const html = await renderMarkdown(post.content);
-  const heroSrc = post.thumbnail ?? defaultThumbnail(post.category);
 
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-3xl">
-        <Link
-          href="/"
-          aria-label="목록으로"
-          title="목록으로"
-          className="mb-6 inline-flex shrink-0 h-9 w-9 items-center justify-center rounded-md border border-border-default bg-bg-default text-fg-default hover:bg-fg-default/5 transition-colors"
-        >
-          {/* Octicon: arrow-left */}
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-            <path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7.25h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z" />
-          </svg>
-        </Link>
+        {/* 제목 블록: 메타 + 유틸 버튼 한 줄, 그 아래 제목 */}
+        <header className="mb-8 border-b border-border-default pb-6">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <p className="text-base text-fg-muted">
+              {categoryLabel(post.category)} ·{" "}
+              {post.createdAt.toLocaleDateString("ko-KR")}
+            </p>
 
-        {/* 히어로 영역: 썸네일(또는 카테고리 기본) */}
-        <div className="mb-8 overflow-hidden rounded-lg border border-border-default">
-          <div className="aspect-video">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroSrc}
-              alt={post.title}
-              className="h-full w-full object-cover"
-            />
+            <div className="flex shrink-0 items-center gap-1">
+              {isAdmin && (
+                <>
+                  <Link
+                    href={`/posts/edit/${post.id}`}
+                    aria-label="수정"
+                    title="수정"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z" />
+                    </svg>
+                  </Link>
+                  <DeletePostButton id={post.id} />
+                </>
+              )}
+
+              <Link
+                href="/"
+                aria-label="목록으로"
+                title="목록으로"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
+              >
+                {/* Octicon: arrow-left */}
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+                  <path d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7.25h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z" />
+                </svg>
+              </Link>
+            </div>
           </div>
-        </div>
 
-        <header className="mb-8 space-y-3">
-          <p className="text-sm text-fg-muted">
-            {categoryLabel(post.category)} ·{" "}
-            {post.createdAt.toLocaleDateString("ko-KR")}
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-fg-default">
+          <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-fg-default">
             {post.title}
           </h1>
         </header>
