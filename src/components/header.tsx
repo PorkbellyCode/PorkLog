@@ -13,7 +13,7 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-40 h-14 bg-[#1f2328] text-white">
-      <div className="mx-auto flex h-full max-w-5xl items-center justify-between gap-4 px-4">
+      <div className="flex h-full items-center justify-between gap-4 px-6">
         <Link
           href="/"
           className="text-base font-semibold tracking-tight hover:opacity-80 transition-opacity"

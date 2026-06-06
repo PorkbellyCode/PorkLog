@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import DeletePostButton from "@/components/delete-post-button";
+import ShareButton from "@/components/share-button";
 
 type PostCardProps = {
   post: {
@@ -33,37 +34,36 @@ export default function PostCard({
         (featured ? " md:col-span-3" : "")
       }
     >
-      <Link
-        href={`/posts/${post.slug}`}
-        className="flex flex-1 flex-col"
+      <div
+        className={
+          featured
+            ? "flex flex-1 flex-col md:grid md:grid-cols-2 md:gap-0"
+            : "flex flex-1 flex-col"
+        }
       >
+        {/* 썸네일: 클릭 시 글로 이동 */}
+        <Link href={`/posts/${post.slug}`} className="block aspect-video shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={post.title}
+            className="h-full w-full object-cover"
+          />
+        </Link>
+
+        {/* 텍스트 영역 */}
         <div
           className={
-            featured
-              ? "flex flex-1 flex-col md:grid md:grid-cols-2 md:gap-0"
-              : "flex flex-1 flex-col"
+            "flex flex-1 flex-col gap-2 p-4" +
+            (featured ? " md:p-6 md:justify-center" : "")
           }
         >
-          {/* 썸네일: 업로드/디폴트 무관하게 16:9 고정. */}
-          <div className="aspect-video shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageSrc}
-              alt={post.title}
-              className="h-full w-full object-cover"
-            />
-          </div>
+          <p className="text-xs text-fg-muted">
+            {categoryLabel(post.category)}
+          </p>
 
-          {/* 텍스트 영역 */}
-          <div
-            className={
-              "flex flex-1 flex-col gap-2 p-4" +
-              (featured ? " md:p-6 md:justify-center" : "")
-            }
-          >
-            <p className="text-xs text-fg-muted">
-              {categoryLabel(post.category)}
-            </p>
+          {/* 제목: 클릭 시 글로 이동 */}
+          <Link href={`/posts/${post.slug}`}>
             <h2
               className={
                 "font-semibold text-fg-default group-hover:text-accent-fg transition-colors " +
@@ -72,43 +72,51 @@ export default function PostCard({
             >
               {post.title}
             </h2>
-            <p
-              className={
-                "text-fg-muted " +
-                (featured ? "text-base line-clamp-3" : "text-sm line-clamp-2")
-              }
-            >
-              {preview}
-            </p>
-            <time className="text-xs text-fg-muted mt-auto">
+          </Link>
+
+          <p
+            className={
+              "text-fg-muted " +
+              (featured ? "text-base line-clamp-3" : "text-sm line-clamp-2")
+            }
+          >
+            {preview}
+          </p>
+
+          {/* 날짜 줄: 좌측 날짜 + 우측 액션 버튼 (mt-auto 로 카드 하단 고정) */}
+          <div className="mt-auto flex items-center justify-between gap-2">
+            <time className="text-xs text-fg-muted">
               {post.createdAt.toLocaleDateString("ko-KR")}
             </time>
+
+            <div className="flex shrink-0 items-center gap-1">
+              <ShareButton slug={post.slug} title={post.title} />
+              {isAdmin && (
+                <>
+                  <Link
+                    href={`/posts/edit/${post.id}`}
+                    aria-label="수정"
+                    title="수정"
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 16 16"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z" />
+                    </svg>
+                  </Link>
+                  <DeletePostButton id={post.id} />
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </Link>
-
-      {isAdmin && (
-        <div className="flex shrink-0 items-center justify-end gap-1 border-t border-border-default px-2 py-1.5">
-          <Link
-            href={`/posts/edit/${post.id}`}
-            aria-label="수정"
-            title="수정"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-muted hover:bg-fg-default/5 hover:text-fg-default transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 16 16"
-              width="16"
-              height="16"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61c-.21.21-.47.364-.756.445l-3.251.93a.75.75 0 0 1-.927-.928l.929-3.25c.081-.286.235-.547.445-.758l8.61-8.61Zm.176 4.823L9.75 4.81l-6.286 6.287a.253.253 0 0 0-.064.108l-.558 1.953 1.953-.558a.253.253 0 0 0 .108-.064Zm1.238-3.763a.25.25 0 0 0-.354 0L10.811 3.75l1.439 1.44 1.263-1.263a.25.25 0 0 0 0-.354Z" />
-            </svg>
-          </Link>
-          <DeletePostButton id={post.id} />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

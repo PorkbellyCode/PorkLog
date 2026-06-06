@@ -15,6 +15,7 @@ import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import DeletePostButton from "@/components/delete-post-button";
+import ShareButton from "@/components/share-button";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -80,8 +81,8 @@ export default async function PostPage({
               {categoryLabel(post.category)} ·{" "}
               {post.createdAt.toLocaleDateString("ko-KR")}
             </p>
-
             <div className="flex shrink-0 items-center gap-1">
+              <ShareButton slug={post.slug} title={post.title} />
               {isAdmin && (
                 <>
                   <Link
