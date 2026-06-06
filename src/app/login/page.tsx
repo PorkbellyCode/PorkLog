@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Lottie from "lottie-react";
 import { authClient } from "@/lib/auth-client";
+import animationData from "./login-animation.json";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,40 +29,61 @@ export default function LoginPage() {
     router.refresh();
   }
 
+  const inputClass =
+    "w-full h-11 rounded-md border border-border-default bg-bg-default px-3 text-sm text-fg-default placeholder:text-fg-muted focus:border-accent-fg focus:outline-none focus:ring-2 focus:ring-accent-fg/30 transition-colors";
+
   return (
-    <main className="min-h-svh p-8 flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-xl font-semibold">로그인</h1>
+    <main className="flex min-h-svh items-center justify-center bg-bg-subtle p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          {/* PorkLog: 최상단, 크게 */}
+          <h1 className="text-7xl font-bold tracking-tight text-fg-default">
+            PorkLog
+          </h1>
+          {/* Lottie: PorkLog 아래, 간격(mt-6) */}
+          <Lottie
+            animationData={animationData}
+            loop
+            className="mx-auto mt-6 h-[154px] w-[154px]"
+          />
+        </div>
 
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="이메일"
-          autoComplete="email"
-          required
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호"
-          autoComplete="current-password"
-          required
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="이메일"
+            autoComplete="email"
+            required
+            className={inputClass}
+          />
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="비밀번호"
+            autoComplete="current-password"
+            required
+            className={inputClass}
+          />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-        >
-          {loading ? "로그인 중…" : "로그인"}
-        </button>
-      </form>
+          {error && (
+            <p className="rounded-md border border-danger-fg/30 bg-danger-fg/10 px-3 py-2 text-sm text-danger-fg">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-11 rounded-md bg-accent-fg text-sm font-medium text-white hover:bg-accent-fg/90 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "로그인 중…" : "로그인"}
+          </button>
+        </form>
+      </div>
     </main>
   );
 }
