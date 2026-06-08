@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { unified } from "unified";
@@ -25,6 +25,15 @@ const getPost = cache(async (slug: string) => {
   const [post] = await db.select().from(posts).where(eq(posts.slug, slug));
   return post ?? null;
 });
+
+// 조회수 +1. cache 로 감싼 getPost 밖에서 별도 write 로 처리해
+// metadata 생성 호출이 카운트를 올리는 걸 막는다. 원자적 증가.
+async function incrementViewCount(slug: string) {
+  await db
+    .update(posts)
+    .set({ viewCount: sql`${posts.viewCount} + 1` })
+    .where(eq(posts.slug, slug));
+}
 
 async function renderMarkdown(markdown: string): Promise<string> {
   const file = await unified()
@@ -66,6 +75,8 @@ export default async function PostPage({
 
   if (!post) notFound();
 
+  await incrementViewCount(post.slug);
+  
   const session = await auth.api.getSession({ headers: await headers() });
   const isAdmin = !!session;
 
@@ -77,9 +88,18 @@ export default async function PostPage({
         {/* 제목 블록: 메타 + 유틸 버튼 한 줄, 그 아래 제목 */}
         <header className="mb-8 border-b border-border-default pb-6">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <p className="text-base text-fg-muted">
-              {categoryLabel(post.category)} ·{" "}
-              {post.createdAt.toLocaleDateString("ko-KR")}
+            <p className="flex items-center gap-2 text-base text-fg-muted">
+              <span>
+                {categoryLabel(post.category)} ·{" "}
+                {post.createdAt.toLocaleDateString("ko-KR")}
+              </span>
+              <span className="inline-flex items-center gap-1" title="조회수">
+                {/* Octicon: eye */}
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true">
+                  <path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 0 1 0 1.798c-.45.678-1.367 1.932-2.637 3.023C11.67 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.831.88 9.577.43 8.899a1.62 1.62 0 0 1 0-1.798c.45-.678 1.367-1.932 2.637-3.023C4.33 2.992 6.019 2 8 2ZM1.679 7.932a.12.12 0 0 0 0 .136c.411.622 1.241 1.75 2.366 2.717C5.176 11.758 6.527 12.5 8 12.5c1.473 0 2.825-.742 3.955-1.715 1.124-.967 1.954-2.096 2.366-2.717a.12.12 0 0 0 0-.136c-.412-.621-1.242-1.75-2.366-2.717C10.824 4.242 9.473 3.5 8 3.5c-1.473 0-2.825.742-3.955 1.715-1.124.967-1.954 2.096-2.366 2.717ZM8 10a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 10Z" />
+                </svg>
+                {post.viewCount.toLocaleString("ko-KR")}
+              </span>
             </p>
             <div className="flex shrink-0 items-center gap-1">
               <ShareButton slug={post.slug} title={post.title} />

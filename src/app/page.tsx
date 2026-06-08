@@ -52,6 +52,7 @@ export default async function Home({
       content: posts.content,
       category: posts.category,
       thumbnail: posts.thumbnail,
+      viewCount: posts.viewCount,
       createdAt: posts.createdAt,
     })
     .from(posts)
