@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { CATEGORIES, isValidCategory } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
+import { getCommentCounts } from "@/lib/github-discussions";
 import PostCard from "@/components/post-card";
 import Pagination from "@/components/pagination";
 import Link from "next/link";
@@ -60,6 +61,9 @@ export default async function Home({
     .orderBy(desc(posts.createdAt))
     .limit(PAGE_SIZE)
     .offset(offset);
+
+  // Giscus(GitHub Discussions) 댓글 수: pathname -> count. 5분 캐시.
+  const commentCounts = await getCommentCounts();
 
   const tabs: { label: string; key: string | undefined }[] = [
     { label: "전체", key: undefined },
@@ -141,6 +145,7 @@ export default async function Home({
                     preview={extractPreview(post.content)}
                     featured={featured}
                     isAdmin={isAdmin}
+                    commentCount={commentCounts[`posts/${post.slug}`] ?? 0}
                   />
                 );
               })}
