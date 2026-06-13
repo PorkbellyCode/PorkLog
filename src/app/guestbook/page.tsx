@@ -25,8 +25,6 @@ export default async function GuestbookPage({
       id: guestbook.id,
       authorId: guestbook.authorId,
       content: guestbook.content,
-      images: guestbook.images,
-      isSecret: guestbook.isSecret,
       updatedAt: guestbook.updatedAt,
       createdAt: guestbook.createdAt,
     })

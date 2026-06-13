@@ -13,14 +13,10 @@ const CreateSchema = z.object({
   authorId: z.string().min(1, "작성자 ID를 입력해주세요.").max(20, "20자 이내로 입력해주세요."),
   password: z.string().min(4, "비밀번호는 4자 이상이어야 합니다.").max(20, "20자 이내로 입력해주세요."),
   content: z.string().min(1, "내용을 입력해주세요.").max(500, "500자 이내로 입력해주세요."),
-  images: z.array(z.string().url()).default([]),
-  isSecret: z.boolean().default(false),
 });
 
 const EditSchema = z.object({
   content: z.string().min(1, "내용을 입력해주세요.").max(500, "500자 이내로 입력해주세요."),
-  images: z.array(z.string().url()).default([]),
-  isSecret: z.boolean().default(false),
   password: z.string().min(1, "비밀번호를 입력해주세요."),
 });
 
@@ -28,22 +24,18 @@ export async function createEntry(formData: {
   authorId: string;
   password: string;
   content: string;
-  images: string[];
-  isSecret: boolean;
 }) {
   const parsed = CreateSchema.safeParse(formData);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0].message };
   }
-  const { authorId, password, content, images, isSecret } = parsed.data;
+  const { authorId, password, content } = parsed.data;
   const passwordHash = await bcrypt.hash(password, 10);
 
   await db.insert(guestbook).values({
     authorId,
     passwordHash,
     content,
-    images,
-    isSecret,
   });
 
   revalidatePath("/guestbook");
@@ -55,8 +47,6 @@ export async function editEntry(
   formData: {
     password: string;
     content: string;
-    images: string[];
-    isSecret: boolean;
   }
 ) {
   const parsed = EditSchema.safeParse(formData);
@@ -74,8 +64,6 @@ export async function editEntry(
     .update(guestbook)
     .set({
       content: parsed.data.content,
-      images: parsed.data.images,
-      isSecret: parsed.data.isSecret,
       updatedAt: new Date(),
     })
     .where(eq(guestbook.id, id));

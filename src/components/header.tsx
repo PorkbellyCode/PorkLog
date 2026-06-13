@@ -19,12 +19,12 @@ export default async function Header() {
         </Link>
 
         <div className="flex items-center gap-3">
-          <Link
+          {/* <Link
             href="/guestbook"
             className="text-sm text-white/80 hover:text-white transition-colors"
           >
             방명록
-          </Link>
+          </Link> */}
           {session ? (
             <LogoutButton />
           ) : (

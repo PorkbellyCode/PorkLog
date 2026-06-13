@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core';
 
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
@@ -23,8 +23,6 @@ export const guestbook = pgTable('guestbook', {
   authorId: text('author_id').notNull(),
   passwordHash: text('password_hash').notNull(),
   content: text('content').notNull(),
-  images: text('images').array().default([]).notNull(), // Vercel Blob URL 배열
-  isSecret: boolean('is_secret').default(false).notNull(),
   updatedAt: timestamp('updated_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

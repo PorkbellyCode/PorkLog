@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createEntry, editEntry, deleteEntry } from "@/lib/guestbook-actions";
@@ -9,8 +9,6 @@ type Entry = {
   id: number;
   authorId: string;
   content: string;
-  images: string[];
-  isSecret: boolean;
   updatedAt: Date | null;
   createdAt: Date;
 };
@@ -34,52 +32,16 @@ function formatDate(date: Date) {
   });
 }
 
-async function uploadImage(file: File): Promise<string | null> {
-  const res = await fetch(
-    `/api/guestbook-upload?filename=${encodeURIComponent(file.name)}`,
-    {
-      method: "POST",
-      headers: { "content-type": file.type },
-      body: file,
-    }
-  );
-  if (!res.ok) {
-    const { error } = await res.json();
-    toast.error(error ?? "이미지 업로드에 실패했습니다.");
-    return null;
-  }
-  const { url } = await res.json();
-  return url;
-}
-
-// 작성 폼
+// 작성 폼 (컴포저)
 function CreateForm({ onCreated }: { onCreated: () => void }) {
   const [authorId, setAuthorId] = useState("");
   const [password, setPassword] = useState("");
   const [content, setContent] = useState("");
-  const [isSecret, setIsSecret] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [pending, setPending] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    setUploading(true);
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await uploadImage(file);
-      if (url) urls.push(url);
-    }
-    setImages((prev) => [...prev, ...urls]);
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-  }
 
   async function handleSubmit() {
     setPending(true);
-    const result = await createEntry({ authorId, password, content, images, isSecret });
+    const result = await createEntry({ authorId, password, content });
     setPending(false);
     if (!result.ok) {
       toast.error(result.error);
@@ -89,21 +51,20 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
     setAuthorId("");
     setPassword("");
     setContent("");
-    setImages([]);
-    setIsSecret(false);
     onCreated();
   }
 
   return (
-    <div className="rounded-lg border border-border-default bg-bg-subtle p-4 space-y-3">
-      <div className="flex gap-2">
+    <div className="rounded-lg border border-border-default bg-bg-default transition-colors focus-within:border-accent-fg">
+      {/* 작성자 정보 */}
+      <div className="flex flex-col divide-y divide-border-default border-b border-border-default sm:flex-row sm:divide-x sm:divide-y-0">
         <input
           type="text"
           placeholder="작성자 ID"
           value={authorId}
           onChange={(e) => setAuthorId(e.target.value)}
           maxLength={20}
-          className="h-8 w-full rounded-md border border-border-default bg-bg-default px-3 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none focus:border-accent-fg transition-colors"
+          className="h-9 w-full bg-transparent px-3 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none"
         />
         <input
           type="password"
@@ -111,75 +72,26 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           maxLength={20}
-          className="h-8 w-full rounded-md border border-border-default bg-bg-default px-3 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none focus:border-accent-fg transition-colors"
+          className="h-9 w-full bg-transparent px-3 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none"
         />
       </div>
+
+      {/* 본문 */}
       <textarea
         placeholder="방명록을 남겨주세요. (500자 이내)"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         maxLength={500}
         rows={3}
-        className="w-full rounded-md border border-border-default bg-bg-default px-3 py-2 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none focus:border-accent-fg transition-colors resize-none"
+        className="w-full resize-none bg-transparent px-3 py-2 text-sm text-fg-default placeholder:text-fg-muted focus:outline-none"
       />
 
-      {/* 업로드된 이미지 미리보기 */}
-      {images.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {images.map((url, i) => (
-            <div key={i} className="relative">
-              <img src={url} alt="" className="h-20 w-20 rounded-md object-cover border border-border-default" />
-              <button
-                type="button"
-                onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
-                className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger-fg text-white text-xs"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          {/* 이미지 첨부 */}
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            disabled={uploading}
-            className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg-default transition-colors disabled:opacity-50"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-              <path d="M1.75 2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h.94a.76.76 0 0 1 .03-.03l6.077-6.078a1.75 1.75 0 0 1 2.474 0l1.326 1.326a.25.25 0 0 0 .354 0l1.698-1.697a.25.25 0 0 0 0-.354L12.78 4.09a.25.25 0 0 0-.354 0L10.78 5.735a.75.75 0 0 1-1.06-1.06l1.644-1.645a1.75 1.75 0 0 1 2.475 0l1.613 1.614a1.75 1.75 0 0 1 0 2.474l-1.698 1.698a1.75 1.75 0 0 1-2.474 0l-1.326-1.326a.25.25 0 0 0-.354 0L3.022 15H14.25a.25.25 0 0 0 .25-.25v-1a.75.75 0 0 1 1.5 0v1A1.75 1.75 0 0 1 14.25 16.5H1.75A1.75 1.75 0 0 1 0 14.75V2.75C0 1.784.784 1 1.75 1h4.5a.75.75 0 0 1 0 1.5Z" />
-            </svg>
-            {uploading ? "업로드 중..." : "이미지 첨부"}
-          </button>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            multiple
-            onChange={handleImageChange}
-            className="hidden"
-          />
-
-          {/* 비밀글 */}
-          <label className="inline-flex items-center gap-1.5 text-sm text-fg-muted cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={isSecret}
-              onChange={(e) => setIsSecret(e.target.checked)}
-              className="rounded"
-            />
-            비밀글
-          </label>
-        </div>
-
+      {/* 툴바 */}
+      <div className="flex items-center justify-end border-t border-border-default px-2 py-2">
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={pending || uploading}
+          disabled={pending}
           className="h-8 px-4 rounded-md bg-accent-fg text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
         >
           {pending ? "등록 중..." : "등록"}
@@ -195,36 +107,14 @@ function EntryItem({ entry, isAdmin, onChanged }: { entry: Entry; isAdmin: boole
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editPassword, setEditPassword] = useState("");
   const [editContent, setEditContent] = useState(entry.content);
-  const [editImages, setEditImages] = useState<string[]>(entry.images);
-  const [editIsSecret, setEditIsSecret] = useState(entry.isSecret);
   const [deletePassword, setDeletePassword] = useState("");
-  const [uploading, setUploading] = useState(false);
   const [pending, setPending] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const isBlurred = entry.isSecret && !isAdmin;
-
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    setUploading(true);
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await uploadImage(file);
-      if (url) urls.push(url);
-    }
-    setEditImages((prev) => [...prev, ...urls]);
-    setUploading(false);
-    if (fileRef.current) fileRef.current.value = "";
-  }
 
   async function handleEdit() {
     setPending(true);
     const result = await editEntry(entry.id, {
       password: editPassword,
       content: editContent,
-      images: editImages,
-      isSecret: editIsSecret,
     });
     setPending(false);
     if (!result.ok) {
@@ -257,14 +147,6 @@ function EntryItem({ entry, isAdmin, onChanged }: { entry: Entry; isAdmin: boole
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-fg-default">{entry.authorId}</span>
-            {entry.isSecret && (
-              <span className="inline-flex items-center gap-0.5 text-xs text-fg-muted">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
-                  <path d="M4 4a4 4 0 0 1 8 0v2h.25c.966 0 1.75.784 1.75 1.75v5.5A1.75 1.75 0 0 1 12.25 15h-8.5A1.75 1.75 0 0 1 2 13.25v-5.5C2 6.784 2.784 6 3.75 6H4Zm8.25 3.5h-8.5a.25.25 0 0 0-.25.25v5.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-5.5a.25.25 0 0 0-.25-.25ZM10.5 6V4a2.5 2.5 0 0 0-5 0v2Z" />
-                </svg>
-                비밀글
-              </span>
-            )}
           </div>
           <p className="text-xs text-fg-muted">
             {formatDate(entry.createdAt)}
@@ -305,22 +187,7 @@ function EntryItem({ entry, isAdmin, onChanged }: { entry: Entry; isAdmin: boole
       </div>
 
       {/* 본문 */}
-      {isBlurred ? (
-        <p className="text-sm text-fg-default select-none blur-md pointer-events-none">
-          {entry.content}
-        </p>
-      ) : (
-        <p className="text-sm text-fg-default whitespace-pre-wrap">{entry.content}</p>
-      )}
-
-      {/* 이미지 */}
-      {entry.images.length > 0 && (
-        <div className={`flex flex-wrap gap-2 ${isBlurred ? "blur-md pointer-events-none select-none" : ""}`}>
-          {entry.images.map((url, i) => (
-            <img key={i} src={url} alt="" className="h-24 w-24 rounded-md object-cover border border-border-default" />
-          ))}
-        </div>
-      )}
+      <p className="text-sm text-fg-default whitespace-pre-wrap">{entry.content}</p>
 
       {/* 수정 폼 (인라인) */}
       {showEdit && (
@@ -340,71 +207,22 @@ function EntryItem({ entry, isAdmin, onChanged }: { entry: Entry; isAdmin: boole
             className="w-full rounded-md border border-border-default bg-bg-subtle px-3 py-2 text-sm text-fg-default focus:outline-none focus:border-accent-fg transition-colors resize-none"
           />
 
-          {editImages.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {editImages.map((url, i) => (
-                <div key={i} className="relative">
-                  <img src={url} alt="" className="h-20 w-20 rounded-md object-cover border border-border-default" />
-                  <button
-                    type="button"
-                    onClick={() => setEditImages((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-danger-fg text-white text-xs"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                disabled={uploading}
-                className="inline-flex items-center gap-1 text-sm text-fg-muted hover:text-fg-default transition-colors disabled:opacity-50"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
-                  <path d="M1.75 2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h.94a.76.76 0 0 1 .03-.03l6.077-6.078a1.75 1.75 0 0 1 2.474 0l1.326 1.326a.25.25 0 0 0 .354 0l1.698-1.697a.25.25 0 0 0 0-.354L12.78 4.09a.25.25 0 0 0-.354 0L10.78 5.735a.75.75 0 0 1-1.06-1.06l1.644-1.645a1.75 1.75 0 0 1 2.475 0l1.613 1.614a1.75 1.75 0 0 1 0 2.474l-1.698 1.698a1.75 1.75 0 0 1-2.474 0l-1.326-1.326a.25.25 0 0 0-.354 0L3.022 15H14.25a.25.25 0 0 0 .25-.25v-1a.75.75 0 0 1 1.5 0v1A1.75 1.75 0 0 1 14.25 16.5H1.75A1.75 1.75 0 0 1 0 14.75V2.75C0 1.784.784 1 1.75 1h4.5a.75.75 0 0 1 0 1.5Z" />
-                </svg>
-                {uploading ? "업로드 중..." : "이미지 첨부"}
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                multiple
-                onChange={handleImageChange}
-                className="hidden"
-              />
-              <label className="inline-flex items-center gap-1.5 text-sm text-fg-muted cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={editIsSecret}
-                  onChange={(e) => setEditIsSecret(e.target.checked)}
-                  className="rounded"
-                />
-                비밀글
-              </label>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => { setShowEdit(false); setEditPassword(""); }}
-                className="h-8 px-3 rounded-md border border-border-default text-sm text-fg-muted hover:bg-bg-subtle transition-colors"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={handleEdit}
-                disabled={pending || uploading}
-                className="h-8 px-4 rounded-md bg-accent-fg text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                {pending ? "저장 중..." : "저장"}
-              </button>
-            </div>
+          <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => { setShowEdit(false); setEditPassword(""); }}
+              className="h-8 px-3 rounded-md border border-border-default text-sm text-fg-muted hover:bg-bg-subtle transition-colors"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={handleEdit}
+              disabled={pending}
+              className="h-8 px-4 rounded-md bg-accent-fg text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {pending ? "저장 중..." : "저장"}
+            </button>
           </div>
         </div>
       )}
