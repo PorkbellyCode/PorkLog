@@ -1,9 +1,6 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import HeaderSearch from "@/components/header-search";
-import SearchBar from "@/components/search-bar";
 import ThemeToggle from "@/components/theme-toggle";
 import LogoutButton from "@/components/logout-button";
 
@@ -21,10 +18,13 @@ export default async function Header() {
           PorkLog
         </Link>
 
-        <div className="flex items-center gap-2">
-          <Suspense fallback={<SearchBar initialQuery="" />}>
-            <HeaderSearch />
-          </Suspense>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/guestbook"
+            className="text-sm text-white/80 hover:text-white transition-colors"
+          >
+            방명록
+          </Link>
           {session ? (
             <LogoutButton />
           ) : (

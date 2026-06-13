@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { desc, eq, ilike, count, type SQL } from "drizzle-orm";
@@ -8,6 +9,7 @@ import { extractPreview } from "@/lib/post-preview";
 import { getCommentCounts } from "@/lib/github-discussions";
 import PostCard from "@/components/post-card";
 import Pagination from "@/components/pagination";
+import ContentSearch from "@/components/content-search";
 import Link from "next/link";
 
 const PAGE_SIZE = 9;
@@ -102,7 +104,11 @@ export default async function Home({
               );
             })}
           </div>
-          {isAdmin && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Suspense fallback={null}>
+              <ContentSearch />
+            </Suspense>
+            {isAdmin && (
             <Link
               href="/posts/new"
               aria-label="새 글 작성"
@@ -120,7 +126,8 @@ export default async function Home({
                 <path d="M7.75 2a.75.75 0 0 1 .75.75V7h4.25a.75.75 0 0 1 0 1.5H8.5v4.25a.75.75 0 0 1-1.5 0V8.5H2.75a.75.75 0 0 1 0-1.5H7V2.75A.75.75 0 0 1 7.75 2Z" />
               </svg>
             </Link>
-          )}
+            )}
+          </div>
         </nav>
 
         {isSearching && (
