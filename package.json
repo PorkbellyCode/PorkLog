@@ -13,6 +13,7 @@
   "dependencies": {
     "@giscus/react": "^3.1.0",
     "@neondatabase/serverless": "^1.1.0",
+    "@radix-ui/react-accordion": "^1.2.13",
     "@uiw/react-md-editor": "^4.1.1",
     "@vercel/blob": "^2.4.0",
     "bcryptjs": "^3.0.3",
