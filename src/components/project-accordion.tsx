@@ -31,37 +31,59 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
               </svg>
             </Accordion.Trigger>
           </Accordion.Header>
-          <Accordion.Content className="px-4 pb-4 pt-1">
-            <p className="mb-2 text-xs text-fg-muted">
-              {project.period} · {project.role}
+
+          <Accordion.Content className="px-4 pb-4">
+            {/* 메타: 기간 · 역할 */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border-default pt-3 text-xs text-fg-muted">
+              <span className="inline-flex items-center gap-1">
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+                  <path d="M4.75 0a.75.75 0 0 1 .75.75V2h5V.75a.75.75 0 0 1 1.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 0 1 4.75 0ZM2.5 7.5v6.75c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V7.5Zm10.75-4H2.75a.25.25 0 0 0-.25.25V6h11V3.75a.25.25 0 0 0-.25-.25Z" />
+                </svg>
+                {project.period}
+              </span>
+              <span aria-hidden="true">·</span>
+              <span>{project.role}</span>
+            </div>
+
+            {/* 개요 */}
+            <p className="mt-3 rounded-md bg-bg-subtle px-3 py-2 text-sm text-fg-default">
+              {project.summary}
             </p>
-            <p className="mb-3 text-sm text-fg-default">{project.summary}</p>
 
+            {/* 주요 업무 */}
             {project.tasks.length > 0 && (
-              <ul className="mb-3 list-disc space-y-1 pl-5">
-                {project.tasks.map((task, j) => (
-                  <li key={j} className="text-sm text-fg-default">
-                    {task}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {project.tech.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-1.5">
-                {project.tech.map((t, j) => (
-                  <span
-                    key={j}
-                    className="rounded-md border border-border-default bg-bg-subtle px-2 py-0.5 text-xs text-fg-muted"
-                  >
-                    {t}
-                  </span>
-                ))}
+              <div className="mt-4">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">주요 업무</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  {project.tasks.map((task, j) => (
+                    <li key={j} className="text-sm text-fg-default">
+                      {task}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
+            {/* 사용 기술 */}
+            {project.tech.length > 0 && (
+              <div className="mt-4">
+                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">사용 기술</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {project.tech.map((t, j) => (
+                    <span
+                      key={j}
+                      className="rounded-md border border-border-default bg-bg-subtle px-2 py-0.5 text-xs text-fg-muted"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 이미지 */}
             {project.images.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 {project.images.map((img, j) => (
                   <img
                     key={j}
@@ -73,8 +95,9 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
               </div>
             )}
 
+            {/* 링크 */}
             {project.links.length > 0 && (
-              <div className="flex flex-wrap gap-4">
+              <div className="mt-4 flex flex-wrap gap-4 border-t border-border-default pt-3">
                 {project.links.map((link, j) => (
                   <a
                     key={j}

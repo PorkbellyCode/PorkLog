@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { projects, sideProjects } from "@/lib/projects";
 import ProjectAccordion from "@/components/project-accordion";
+import SkillStack from "@/components/skill-stack";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "프론트엔드를 중심으로 풀스택을 아우르는 개발자 김형준의 소개 페이지입니다. 경력, 기술 스택, 프로젝트 경험 등을 담고 있습니다.",
+  description: "보여지는 것 이상을 고려하는 개발자 김형준의 소개 페이지",
 };
 
 const STACK = [
@@ -39,16 +40,20 @@ export default function AboutPage() {
         {/* 인트로 */}
         <section className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-border-default bg-bg-subtle text-fg-muted">
-              <svg viewBox="0 0 16 16" width="28" height="28" fill="currentColor" aria-hidden="true">
-                <path d="M10.561 8.073a6.005 6.005 0 0 1 3.432 5.142.75.75 0 1 1-1.498.07 4.5 4.5 0 0 0-8.99 0 .75.75 0 0 1-1.498-.07 6.004 6.004 0 0 1 3.431-5.142 3.999 3.999 0 1 1 5.621 0ZM8 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
-              </svg>
-            </div>
+            <img
+              src="/khj.jpg"
+              alt="김형준 증명사진"
+              className="h-16 w-16 shrink-0 rounded-full border border-border-default object-cover"
+            />
             <div>
-              <h1 className="text-2xl font-bold text-fg-default">김형준</h1>
-              <p className="mt-1 text-sm text-fg-muted">프론트엔드를 중심으로 풀스택을 아우르는 개발자</p>
+              <h1 className="text-2xl font-bold text-fg-default">
+                김형준
+                <span className="ml-2 text-base font-normal text-fg-muted">Hyeongjun Kim (1990.05.01)</span>
+              </h1>
+              <p className="mt-1 text-sm text-fg-muted">보여지는 것 이상을 고려하는 개발자</p>
             </div>
           </div>
+
           <p className="text-sm leading-relaxed text-fg-default">
             프로소프트에서 풀스택 개발자로 일하며, 대규모 엔터프라이즈 시스템과 B2B 솔루션을 구축·고도화해 왔습니다.
             상용 그리드가 기본 제공하지 않는 기능의 커스텀 개발, 복잡한 상태 관리, 다국어·개인화 처리 등 복잡도 높은
@@ -57,8 +62,9 @@ export default function AboutPage() {
           </p>
         </section>
 
-        {/* 경력 · 학력 */}
-        <section className="grid gap-3 sm:grid-cols-2">
+        {/* 경력 */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-fg-default">경력</h2>
           <div className="flex items-start gap-3 rounded-lg border border-border-default bg-bg-subtle p-4">
             <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true" className="mt-0.5 shrink-0 text-fg-muted">
               <path d="M6.75 0h2.5C10.216 0 11 .784 11 1.75V3h2.25c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5C1 3.784 1.784 3 2.75 3H5V1.75C5 .784 5.784 0 6.75 0Zm-.25 3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Zm-3.75 1.5a.25.25 0 0 0-.25.25v2.5h11v-2.5a.25.25 0 0 0-.25-.25Zm10.5 4.25h-11v4.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25Z" />
@@ -68,6 +74,11 @@ export default function AboutPage() {
               <p className="mt-0.5 text-xs text-fg-muted">2023.7 ~ 현재 · 풀스택 개발</p>
             </div>
           </div>
+        </section>
+
+        {/* 학력 */}
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold text-fg-default">학력</h2>
           <div className="flex items-start gap-3 rounded-lg border border-border-default bg-bg-subtle p-4">
             <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true" className="mt-0.5 shrink-0 text-fg-muted">
               <path d="M8.211.146a.75.75 0 0 0-.422 0l-7 2.1A.75.75 0 0 0 .5 2.974v.526a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75v-.526a.75.75 0 0 0-.289-.728l-7-2.1ZM2.5 5.75a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0ZM1.5 15.25a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75Z" />
@@ -82,16 +93,7 @@ export default function AboutPage() {
         {/* 기술 스택 */}
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-fg-default">기술 스택</h2>
-          <div className="flex flex-wrap gap-2">
-            {STACK.map((t) => (
-              <span
-                key={t}
-                className="rounded-md border border-border-default bg-bg-subtle px-3 py-1 text-sm text-fg-default"
-              >
-                {t}
-              </span>
-            ))}
-          </div>
+          <SkillStack />
         </section>
 
         {/* 강점 */}
