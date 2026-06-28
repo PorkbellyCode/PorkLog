@@ -95,7 +95,7 @@ export default async function Home({
               />
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-fg-default sm:text-3xl">
-                  보이는 것 이상을 생각하는 개발자
+                  보여지는 것 이상을 생각하는 개발자
                 </h1>
                 <p className="mt-2 text-sm leading-relaxed text-fg-muted">
                   프론트엔드를 중심으로, 화면 너머의 동작까지 책임지는 풀스택 개발자입니다.
