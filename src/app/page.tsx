@@ -84,6 +84,43 @@ export default async function Home({
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-8">
+        {/* Resume 진입 히어로: 기본 랜딩(검색·카테고리·페이지네이션 아님)에서만 노출 */}
+        {!isSearching && !activeCategory && currentPage === 1 && (
+          <section className="rounded-lg border border-border-default bg-bg-subtle p-6 sm:p-8">
+            <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
+              <img
+                src="/khj.jpg"
+                alt="김형준 프로필 사진"
+                className="h-20 w-20 shrink-0 rounded-full border border-border-default object-cover sm:h-24 sm:w-24"
+              />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-fg-default sm:text-3xl">
+                  보이는 것 이상을 생각하는 개발자
+                </h1>
+                <p className="mt-2 text-sm leading-relaxed text-fg-muted">
+                  프론트엔드를 중심으로, 화면 너머의 동작까지 책임지는 풀스택 개발자입니다.
+                </p>
+                <Link
+                  href="/resume"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-accent-fg px-4 py-2 text-sm font-medium text-white hover:bg-accent-fg/90 transition-colors"
+                >
+                  Resume 보기
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 16 16"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734L11.94 8.75H2.75a.75.75 0 0 1 0-1.5h9.19L8.22 4.03a.75.75 0 0 1 0-1.06Z" />
+                  </svg>
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
         <nav className="flex items-center justify-between gap-4 border-b border-border-default pb-2">
           <div className="flex gap-4 overflow-x-auto">
             {tabs.map((tab) => {

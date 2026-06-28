@@ -19,6 +19,12 @@ export default async function Header() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/resume"
+            className="text-sm text-white/80 hover:text-white transition-colors"
+          >
+            Resume
+          </Link>
           {/* <Link
             href="/guestbook"
             className="text-sm text-white/80 hover:text-white transition-colors"

@@ -4,7 +4,7 @@ import ProjectAccordion from "@/components/project-accordion";
 import SkillStack from "@/components/skill-stack";
 
 export const metadata: Metadata = {
-  title: "About",
+  title: "Resume",
   description: "보여지는 것 이상을 고려하는 개발자 김형준의 소개 페이지",
 };
 
@@ -33,7 +33,7 @@ const STRENGTHS = [
   },
 ];
 
-export default function AboutPage() {
+export default function ResumePage() {
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-3xl space-y-10">
