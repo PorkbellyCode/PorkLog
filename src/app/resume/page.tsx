@@ -5,7 +5,13 @@ import SkillStack from "@/components/skill-stack";
 
 export const metadata: Metadata = {
   title: "Resume",
-  description: "보이는 것 이상을 고려하는 개발자 김형준의 소개 페이지",
+  description: "보이는 것 이상을 생각하는 개발자 김형준의 경력과 프로젝트.",
+  openGraph: {
+    title: "김형준 | Resume",
+    description: "보이는 것 이상을 생각하는 개발자 김형준의 경력과 프로젝트.",
+    images: ["/khj.jpg"],
+    type: "profile",
+  },
 };
 
 const STACK = [
