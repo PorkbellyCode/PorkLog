@@ -5,7 +5,7 @@ import SkillStack from "@/components/skill-stack";
 
 export const metadata: Metadata = {
   title: "Resume",
-  description: "보여지는 것 이상을 고려하는 개발자 김형준의 소개 페이지",
+  description: "보이는 것 이상을 고려하는 개발자 김형준의 소개 페이지",
 };
 
 const STACK = [
@@ -50,7 +50,7 @@ export default function ResumePage() {
                 김형준
                 <span className="ml-2 text-base font-normal text-fg-muted">Hyeongjun Kim (1990.05.01)</span>
               </h1>
-              <p className="mt-1 text-sm text-fg-muted">보여지는 것 이상을 고려하는 개발자</p>
+              <p className="mt-1 text-sm text-fg-muted">보이는 것 이상을 고려하는 개발자</p>
             </div>
           </div>
 
