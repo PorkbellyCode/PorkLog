@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "김형준 | Resume",
     description: "보이는 것 이상을 생각하는 개발자 김형준의 경력과 프로젝트.",
-    images: ["/khj.jpg"],
+    images: ["/og-resume.png"],
     type: "profile",
   },
 };
