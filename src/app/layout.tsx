@@ -3,12 +3,21 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import Toaster from "@/components/toaster";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://pork-log.vercel.app"),
-  title: "PorkLog",
-  description: "나를 기록하는 공간",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "PorkLog",
+    template: "%s | PorkLog",
+  },
+  description: "김형준의 개발 블로그, 일상을 곁들인.",
+  openGraph: {
+    siteName: "PorkLog",
+    locale: "ko_KR",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

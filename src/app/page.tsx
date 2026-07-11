@@ -11,8 +11,25 @@ import PostCard from "@/components/post-card";
 import Pagination from "@/components/pagination";
 import ContentSearch from "@/components/content-search";
 import Link from "next/link";
+import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 const PAGE_SIZE = 9;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; q?: string; page?: string }>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const isSearching = (sp.q?.trim() ?? "").length > 0;
+
+  return {
+    // 카테고리·페이지·검색 등 모든 쿼리 조합의 정본은 홈("/").
+    alternates: { canonical: "/" },
+    // 검색 결과는 thin/중복 콘텐츠라 색인에서 제외 (크롤은 허용).
+    robots: isSearching ? { index: false, follow: true } : undefined,
+  };
+}
 
 export default async function Home({
   searchParams,
