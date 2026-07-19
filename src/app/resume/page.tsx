@@ -15,16 +15,6 @@ export const metadata: Metadata = {
   },
 };
 
-const STACK = [
-  "Vue.js",
-  "React",
-  "TypeScript",
-  "JavaScript",
-  "HTML/CSS",
-  "Java",
-  "Spring Boot",
-];
-
 const STRENGTHS = [
   {
     title: "복잡한 엔터프라이즈 UI",
