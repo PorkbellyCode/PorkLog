@@ -25,12 +25,6 @@ export default async function Header() {
           >
             Resume
           </Link>
-          {/* <Link
-            href="/guestbook"
-            className="text-sm text-white/80 hover:text-white transition-colors"
-          >
-            방명록
-          </Link> */}
           {session ? (
             <LogoutButton />
           ) : (

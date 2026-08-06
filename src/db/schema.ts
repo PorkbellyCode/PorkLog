@@ -17,12 +17,3 @@ export const siteVisits = pgTable('site_visits', {
   visitDate: text('visit_date').primaryKey(),
   count: integer('count').default(0).notNull(),
 });
-
-export const guestbook = pgTable('guestbook', {
-  id: serial('id').primaryKey(),
-  authorId: text('author_id').notNull(),
-  passwordHash: text('password_hash').notNull(),
-  content: text('content').notNull(),
-  updatedAt: timestamp('updated_at'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
