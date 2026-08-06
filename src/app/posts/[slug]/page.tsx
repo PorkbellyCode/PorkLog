@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, lt, gt, desc, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { unified } from "unified";
@@ -17,6 +17,7 @@ import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import { extractToc, readingTime } from "@/lib/toc";
 import TableOfContents from "@/components/table-of-contents";
+import PostNav from "@/components/post-nav";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
 import { auth } from "@/lib/auth";
@@ -49,6 +50,25 @@ async function renderMarkdown(markdown: string): Promise<string> {
     .use(rehypeStringify)
     .process(markdown);
   return String(file);
+}
+
+// 작성일 기준 인접 글. prev = 더 오래된 글, next = 더 최신 글.
+async function getNeighbors(createdAt: Date) {
+  const [prev] = await db
+    .select({ slug: posts.slug, title: posts.title })
+    .from(posts)
+    .where(lt(posts.createdAt, createdAt))
+    .orderBy(desc(posts.createdAt))
+    .limit(1);
+
+  const [next] = await db
+    .select({ slug: posts.slug, title: posts.title })
+    .from(posts)
+    .where(gt(posts.createdAt, createdAt))
+    .orderBy(asc(posts.createdAt))
+    .limit(1);
+
+  return { prev: prev ?? null, next: next ?? null };
 }
 
 export async function generateMetadata({
@@ -89,6 +109,7 @@ export default async function PostPage({
   const html = await renderMarkdown(post.content);
   const toc = extractToc(post.content);
   const minutes = readingTime(post.content);
+  const { prev, next } = await getNeighbors(post.createdAt);
 
   return (
     <main className="px-4 py-8 sm:py-12">
@@ -165,6 +186,8 @@ export default async function PostPage({
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </article>
+
+        <PostNav prev={prev} next={next} />
 
         <div className="mt-12">
           <Comments />
