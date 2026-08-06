@@ -18,6 +18,7 @@ import { extractPreview } from "@/lib/post-preview";
 import { extractToc, readingTime } from "@/lib/toc";
 import TableOfContents from "@/components/table-of-contents";
 import PostNav from "@/components/post-nav";
+import SeriesNav from "@/components/series-nav";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
 import { auth } from "@/lib/auth";
@@ -71,6 +72,15 @@ async function getNeighbors(createdAt: Date) {
   return { prev: prev ?? null, next: next ?? null };
 }
 
+// 같은 시리즈의 글을 회차 순으로. 회차가 비어 있으면 작성일 순으로 밀린다.
+async function getSeriesEntries(series: string) {
+  return db
+    .select({ slug: posts.slug, title: posts.title })
+    .from(posts)
+    .where(eq(posts.series, series))
+    .orderBy(asc(posts.seriesOrder), asc(posts.createdAt));
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -110,6 +120,7 @@ export default async function PostPage({
   const toc = extractToc(post.content);
   const minutes = readingTime(post.content);
   const { prev, next } = await getNeighbors(post.createdAt);
+  const seriesEntries = post.series ? await getSeriesEntries(post.series) : [];
 
   return (
     <main className="px-4 py-8 sm:py-12">
@@ -180,6 +191,14 @@ export default async function PostPage({
             {post.title}
           </h1>
         </header>
+
+        {post.series && (
+          <SeriesNav
+            series={post.series}
+            entries={seriesEntries}
+            currentSlug={post.slug}
+          />
+        )}
 
         <TableOfContents items={toc} />
 

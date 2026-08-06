@@ -7,6 +7,9 @@ export const posts = pgTable('posts', {
   content: text('content').notNull(),
   category: text('category').notNull(),
   thumbnail: text('thumbnail'),
+  // 연재 시리즈. series 가 null 이면 단발성 글이고, seriesOrder 도 항상 null 이다.
+  series: text('series'),
+  seriesOrder: integer('series_order'),
   viewCount: integer('view_count').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

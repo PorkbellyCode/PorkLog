@@ -40,6 +40,8 @@ export async function createPost(input: {
   content: string;
   category: string;
   thumbnail: string | null;
+  series: string | null;
+  seriesOrder: number | null;
 }): Promise<PostFormState> {
   await requireSession();
 
@@ -49,7 +51,8 @@ export async function createPost(input: {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail } = parsed.data;
+  const { title, slug, content, category, thumbnail, series, seriesOrder } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -60,7 +63,9 @@ export async function createPost(input: {
     return { formError: "이미 사용 중인 slug 입니다." };
   }
 
-  await db.insert(posts).values({ title, slug, content, category, thumbnail });
+  await db
+    .insert(posts)
+    .values({ title, slug, content, category, thumbnail, series, seriesOrder });
 
   revalidatePath("/");
   return { ok: true };
@@ -74,6 +79,8 @@ export async function updatePost(
     content: string;
     category: string;
     thumbnail: string | null;
+    series: string | null;
+    seriesOrder: number | null;
   },
 ): Promise<PostFormState> {
   await requireSession();
@@ -84,7 +91,8 @@ export async function updatePost(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail } = parsed.data;
+  const { title, slug, content, category, thumbnail, series, seriesOrder } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -103,7 +111,7 @@ export async function updatePost(
 
   await db
     .update(posts)
-    .set({ title, slug, content, category, thumbnail })
+    .set({ title, slug, content, category, thumbnail, series, seriesOrder })
     .where(eq(posts.id, id));
 
   // 썸네일이 바뀌었거나(새 URL) 제거되었으면(null) 이전 Blob 삭제.

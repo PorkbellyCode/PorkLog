@@ -36,6 +36,8 @@ export default async function EditPostPage({
           content: post.content,
           category: post.category,
           thumbnail: post.thumbnail,
+          series: post.series,
+          seriesOrder: post.seriesOrder,
         }}
       />
     </main>
