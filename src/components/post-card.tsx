@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
@@ -45,12 +46,19 @@ export default function PostCard({
         }
       >
         {/* 썸네일: 클릭 시 글로 이동 */}
-        <Link href={`/posts/${post.slug}`} className="block aspect-video shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <Link
+          href={`/posts/${post.slug}`}
+          className="relative block aspect-video shrink-0"
+        >
+          <Image
             src={imageSrc}
             alt={post.title}
-            className="h-full w-full object-cover"
+            fill
+            // featured 카드는 3열 폭(최대 1024px), 일반 카드는 1/3 폭.
+            sizes={featured ? "(min-width: 768px) 512px, 100vw" : "(min-width: 768px) 341px, 100vw"}
+            // 첫 화면 LCP 후보라 최신 글 카드만 우선 로딩한다.
+            priority={featured}
+            className="object-cover"
           />
         </Link>
 

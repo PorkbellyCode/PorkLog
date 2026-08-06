@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { toast } from "sonner";
 import {
   createPost,
@@ -203,9 +204,11 @@ export default function PostForm({ post }: PostFormProps) {
 
         {thumbnail && (
           <div className="flex items-start gap-3">
-            <img
+            <Image
               src={thumbnail}
               alt="썸네일 미리보기"
+              width={96}
+              height={96}
               className="h-24 w-24 rounded-md object-cover border border-border-default"
             />
             <button

@@ -11,6 +11,7 @@ import PostCard from "@/components/post-card";
 import Pagination from "@/components/pagination";
 import ContentSearch from "@/components/content-search";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
 const PAGE_SIZE = 9;
@@ -105,9 +106,12 @@ export default async function Home({
         {!isSearching && !activeCategory && currentPage === 1 && (
           <section className="rounded-lg border border-border-default bg-bg-subtle p-6 sm:p-8">
             <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
-              <img
+              <Image
                 src="/khj.jpg"
                 alt="김형준 프로필 사진"
+                width={96}
+                height={96}
+                priority
                 className="h-20 w-20 shrink-0 rounded-full border border-border-default object-cover sm:h-24 sm:w-24"
               />
               <div>

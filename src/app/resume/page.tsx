@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { projects, sideProjects } from "@/lib/projects";
 import ProjectAccordion from "@/components/project-accordion";
 import PrintButton from "@/components/print-button";
@@ -39,9 +40,12 @@ export default function ResumePage() {
         {/* 인트로 */}
         <section className="space-y-4">
           <div className="flex items-center gap-4">
-            <img
+            <Image
               src="/khj.jpg"
               alt="김형준 증명사진"
+              width={64}
+              height={64}
+              priority
               className="h-16 w-16 shrink-0 rounded-full border border-border-default object-cover"
             />
             <div>

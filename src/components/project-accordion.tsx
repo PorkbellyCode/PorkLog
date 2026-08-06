@@ -1,6 +1,7 @@
 "use client";
 
 import * as Accordion from "@radix-ui/react-accordion";
+import Image from "next/image";
 import type { Project } from "@/lib/projects";
 
 export default function ProjectAccordion({ projects }: { projects: Project[] }) {
@@ -87,11 +88,13 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
             {project.images.length > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {project.images.map((img, j) => (
-                  <img
+                  <Image
                     key={j}
                     src={img.src}
                     alt={img.alt}
-                    className="h-32 rounded-md border border-border-default object-cover"
+                    width={240}
+                    height={128}
+                    className="h-32 w-auto rounded-md border border-border-default object-cover"
                   />
                 ))}
               </div>
