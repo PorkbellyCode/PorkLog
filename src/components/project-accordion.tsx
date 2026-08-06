@@ -32,7 +32,9 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
             </Accordion.Trigger>
           </Accordion.Header>
 
-          <Accordion.Content className="px-4 pb-4">
+          {/* forceMount: 닫힌 항목도 DOM 에 남겨둬야 인쇄(PDF 저장) 시 전부 펼칠 수 있다.
+              화면에서는 Radix 가 hidden 속성을 걸어 감춘다. */}
+          <Accordion.Content forceMount className="px-4 pb-4">
             {/* 메타: 기간 · 역할 */}
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-border-default pt-3 text-xs text-fg-muted">
               <span className="inline-flex items-center gap-1">

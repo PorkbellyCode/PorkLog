@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { projects, sideProjects } from "@/lib/projects";
 import ProjectAccordion from "@/components/project-accordion";
+import PrintButton from "@/components/print-button";
 import SkillStack from "@/components/skill-stack";
 import { GITHUB_URL, EMAIL } from "@/lib/site";
 
@@ -49,6 +50,9 @@ export default function ResumePage() {
                 <span className="ml-2 text-base font-normal text-fg-muted">Hyeongjun Kim (1990.05.01)</span>
               </h1>
               <p className="mt-1 text-sm text-fg-muted">보이는 것 이상을 고려하는 개발자</p>
+            </div>
+            <div className="ml-auto">
+              <PrintButton />
             </div>
           </div>
 

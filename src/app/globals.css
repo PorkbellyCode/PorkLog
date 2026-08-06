@@ -89,3 +89,35 @@ kbd {
 .dark .prose :where(hr) {
   border-color: var(--border-default);
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * 인쇄(브라우저 "PDF로 저장") 스타일 — Resume 페이지 기준
+ * ───────────────────────────────────────────────────────────── */
+@media print {
+  /* 다크 모드로 보고 있어도 인쇄물은 항상 라이트 톤으로 고정한다. */
+  :root,
+  .dark {
+    --bg-default: #ffffff;
+    --bg-subtle: #ffffff;
+    --fg-default: #1f2328;
+    --fg-muted: #59636e;
+    --border-default: #d1d9e0;
+    --border-muted: #d1d9e0;
+    --accent-fg: #0969da;
+  }
+
+  /* Radix Accordion 이 forceMount 로 남겨둔 닫힌 항목까지 모두 펼쳐 인쇄한다. */
+  [data-state="closed"][hidden] {
+    display: block !important;
+  }
+
+  /* 항목이 페이지 경계에서 잘리지 않게 한다. */
+  section,
+  li {
+    break-inside: avoid;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}

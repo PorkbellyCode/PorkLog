@@ -9,7 +9,7 @@ export default async function Header() {
   const session = await auth.api.getSession({ headers: await headers() });
 
   return (
-    <header className="sticky top-0 z-40 h-14 bg-[#1f2328] text-white">
+    <header className="sticky top-0 z-40 h-14 bg-[#1f2328] text-white print:hidden">
       <div className="flex h-full items-center justify-between gap-4 px-6">
         <Link
           href="/"
