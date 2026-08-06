@@ -67,6 +67,11 @@ kbd {
   font-family: var(--font-mono);
 }
 
+/* 목차 앵커로 이동할 때 sticky 헤더(h-14)에 제목이 가려지지 않게 한다. */
+.prose :where(h1, h2, h3, h4) {
+  scroll-margin-top: 5rem;
+}
+
 /* prose(마크다운 본문) 다크 모드 자동 반전.
  * 상세 페이지의 <article class="prose"> 가 다크에서 흰 글씨로 보이게 한다.
  * (2단계에서 페이지별 색 토큰을 직접 적용하기 전의 전역 기본값) */
