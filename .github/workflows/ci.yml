@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: Lint & Typecheck
+    name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +31,8 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+        env:
+          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
