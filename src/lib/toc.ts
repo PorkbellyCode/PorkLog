@@ -48,17 +48,3 @@ export function extractToc(markdown: string): TocItem[] {
 
   return items;
 }
-
-// 한국어 기준 분당 500자로 잡은 대략적인 읽기 시간(분). 최소 1분.
-const CHARS_PER_MINUTE = 500;
-
-export function readingTime(markdown: string): number {
-  const text = markdown
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, "")
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/[#>*_`~\-|]/g, "")
-    .replace(/\s+/g, "");
-
-  return Math.max(1, Math.ceil(text.length / CHARS_PER_MINUTE));
-}
