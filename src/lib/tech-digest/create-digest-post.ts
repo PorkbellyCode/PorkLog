@@ -25,7 +25,7 @@ export async function createDigestPost(post: DigestPost): Promise<CreateDigestRe
   }
 
   const parsed = postInputSchema.parse({
-    title: post.title,
+    title: `이번 주 개발자 뉴스 - ${post.subtitle}`,
     slug,
     content: post.content,
     category: "dev",

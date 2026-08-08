@@ -26,7 +26,15 @@ export default async function Header() {
             Resume
           </Link>
           {session ? (
-            <LogoutButton />
+            <>
+              <Link
+                href="/admin/stats"
+                className="text-sm text-white/80 hover:text-white transition-colors"
+              >
+                통계
+              </Link>
+              <LogoutButton />
+            </>
           ) : (
             <Link
               href="/login"
