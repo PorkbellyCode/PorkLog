@@ -27,17 +27,13 @@ export const postInputSchema = z.object({
     .nullable()
     .or(z.literal("").transform(() => null)),
   // 연재 시리즈. 빈 문자열은 "시리즈 없음"으로 취급한다.
+  // 회차(seriesOrder)는 사용자 입력이 아니라 저장 시 서버에서 자동 계산한다 (post-actions.ts).
   series: z
     .string()
     .trim()
     .max(60, "시리즈명은 60자 이내로 입력하세요.")
     .nullable()
     .transform((v) => (v ? v : null)),
-  seriesOrder: z
-    .number()
-    .int("회차는 정수로 입력하세요.")
-    .min(1, "회차는 1 이상이어야 합니다.")
-    .nullable(),
   // 세부 분류 태그. post-form 에서 이미 정규화하지만 서버에서도 동일하게 한 번 더 정규화한다.
   tags: z
     .array(
@@ -50,8 +46,6 @@ export const postInputSchema = z.object({
     )
     .max(MAX_TAGS, `태그는 최대 ${MAX_TAGS}개까지 입력할 수 있습니다.`)
     .transform((tags) => Array.from(new Set(tags))),
-})
-  // 시리즈명이 없으면 회차도 의미가 없으므로 함께 비운다.
-  .transform((v) => (v.series ? v : { ...v, series: null, seriesOrder: null }));
+});
 
 export type PostInput = z.infer<typeof postInputSchema>;

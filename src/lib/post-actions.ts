@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { postInputSchema } from "@/lib/post-schema";
 import { z } from "zod";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { del } from "@vercel/blob";
 import { auth } from "@/lib/auth";
@@ -34,6 +34,15 @@ async function deleteThumbnailBlob(url: string | null | undefined) {
   }
 }
 
+// 해당 시리즈의 현재 최대 회차 + 1. 시리즈에 글이 없으면 1.
+async function getNextSeriesOrder(series: string): Promise<number> {
+  const [row] = await db
+    .select({ max: sql<number>`coalesce(max(${posts.seriesOrder}), 0)` })
+    .from(posts)
+    .where(eq(posts.series, series));
+  return (row?.max ?? 0) + 1;
+}
+
 export async function createPost(input: {
   title: string;
   slug: string;
@@ -41,7 +50,6 @@ export async function createPost(input: {
   category: string;
   thumbnail: string | null;
   series: string | null;
-  seriesOrder: number | null;
   tags: string[];
 }): Promise<PostFormState> {
   await requireSession();
@@ -52,8 +60,7 @@ export async function createPost(input: {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail, series, seriesOrder, tags } =
-    parsed.data;
+  const { title, slug, content, category, thumbnail, series, tags } = parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -63,6 +70,8 @@ export async function createPost(input: {
   if (existing) {
     return { formError: "이미 사용 중인 slug 입니다." };
   }
+
+  const seriesOrder = series ? await getNextSeriesOrder(series) : null;
 
   await db
     .insert(posts)
@@ -81,7 +90,6 @@ export async function updatePost(
     category: string;
     thumbnail: string | null;
     series: string | null;
-    seriesOrder: number | null;
     tags: string[];
   },
 ): Promise<PostFormState> {
@@ -93,8 +101,7 @@ export async function updatePost(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail, series, seriesOrder, tags } =
-    parsed.data;
+  const { title, slug, content, category, thumbnail, series, tags } = parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -105,11 +112,24 @@ export async function updatePost(
     return { formError: "이미 사용 중인 slug 입니다." };
   }
 
-  // 교체/제거된 옛 썸네일을 지우기 위해 변경 전 값을 읽어둔다.
+  // 교체/제거된 옛 썸네일 삭제, 시리즈 변경 여부 판단을 위해 변경 전 값을 읽어둔다.
   const [current] = await db
-    .select({ thumbnail: posts.thumbnail })
+    .select({
+      thumbnail: posts.thumbnail,
+      series: posts.series,
+      seriesOrder: posts.seriesOrder,
+    })
     .from(posts)
     .where(eq(posts.id, id));
+
+  // 시리즈가 그대로면 기존 회차를 유지하고, 바뀌었으면(새로 시리즈에 들어가는 경우 포함)
+  // 새 시리즈의 다음 번호를 다시 계산한다.
+  const seriesOrder =
+    series === (current?.series ?? null)
+      ? (current?.seriesOrder ?? null)
+      : series
+        ? await getNextSeriesOrder(series)
+        : null;
 
   await db
     .update(posts)

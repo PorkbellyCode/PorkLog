@@ -24,7 +24,6 @@ type PostFormProps = {
     category: string;
     thumbnail: string | null;
     series: string | null;
-    seriesOrder: number | null;
     tags: string[];
   };
 };
@@ -41,10 +40,6 @@ export default function PostForm({ post }: PostFormProps) {
     post?.thumbnail ?? null,
   );
   const [series, setSeries] = useState(post?.series ?? "");
-  // 빈 문자열 = 회차 미지정. 제출 시 number | null 로 변환한다.
-  const [seriesOrder, setSeriesOrder] = useState(
-    post?.seriesOrder != null ? String(post.seriesOrder) : "",
-  );
   const [tags, setTags] = useState<string[]>(post?.tags ?? []);
   const [tagInput, setTagInput] = useState("");
   const [tagError, setTagError] = useState<string | null>(null);
@@ -145,7 +140,6 @@ export default function PostForm({ post }: PostFormProps) {
         category,
         thumbnail,
         series: series.trim() || null,
-        seriesOrder: seriesOrder.trim() === "" ? null : Number(seriesOrder),
         tags,
       };
       const result = isEdit
@@ -277,36 +271,19 @@ export default function PostForm({ post }: PostFormProps) {
         ))}
       </div>
 
-      {/* 시리즈: 비워두면 단발성 글이다. */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_8rem]">
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-fg-default">시리즈</label>
-          <input
-            type="text"
-            value={series}
-            onChange={(e) => setSeries(e.target.value)}
-            placeholder="연재 시리즈명 (비우면 단독 글)"
-            className={inputClass}
-          />
-          {fieldErrors.series?.map((msg) => (
-            <p key={msg} className="text-sm text-danger-fg">{msg}</p>
-          ))}
-        </div>
-
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-fg-default">회차</label>
-          <input
-            type="number"
-            min={1}
-            value={seriesOrder}
-            onChange={(e) => setSeriesOrder(e.target.value)}
-            placeholder="1"
-            className={inputClass}
-          />
-          {fieldErrors.seriesOrder?.map((msg) => (
-            <p key={msg} className="text-sm text-danger-fg">{msg}</p>
-          ))}
-        </div>
+      {/* 시리즈: 비워두면 단발성 글이다. 회차는 저장 시 서버에서 자동으로 매겨진다. */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-fg-default">시리즈</label>
+        <input
+          type="text"
+          value={series}
+          onChange={(e) => setSeries(e.target.value)}
+          placeholder="연재 시리즈명 (비우면 단독 글)"
+          className={inputClass}
+        />
+        {fieldErrors.series?.map((msg) => (
+          <p key={msg} className="text-sm text-danger-fg">{msg}</p>
+        ))}
       </div>
 
       {/* 본문: 화면의 주 영역 */}
