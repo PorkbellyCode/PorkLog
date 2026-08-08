@@ -22,6 +22,8 @@ type PostCardProps = {
   featured?: boolean;
   isAdmin?: boolean;
   commentCount: number;
+  // 현재 활성화된 검색어·카테고리 등 태그 클릭 시 함께 유지할 파라미터
+  tagExtraParams?: Record<string, string>;
 };
 
 export default function PostCard({
@@ -30,6 +32,7 @@ export default function PostCard({
   featured,
   isAdmin,
   commentCount,
+  tagExtraParams,
 }: PostCardProps) {
   const imageSrc = post.thumbnail ?? defaultThumbnail(post.category);
 
@@ -96,7 +99,7 @@ export default function PostCard({
             {preview}
           </p>
 
-          <TagBadges tags={post.tags} max={3} />
+          <TagBadges tags={post.tags} max={3} extraParams={tagExtraParams} />
 
           {/* 날짜 줄: 좌측 날짜 + 우측 액션 버튼 (mt-auto 로 카드 하단 고정) */}
           <div className="mt-auto flex items-center justify-between gap-2">

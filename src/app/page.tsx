@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { desc, eq, ilike, count, arrayContains, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, or, count, arrayContains, type SQL } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { CATEGORIES, isValidCategory } from "@/lib/categories";
+import { CATEGORIES, categoryLabel, isValidCategory } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import { getCommentCounts } from "@/lib/github-discussions";
 import PostCard from "@/components/post-card";
@@ -52,14 +52,17 @@ export default async function Home({
   const currentPage =
     Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
 
-  // 우선순위: 검색 > 태그 > 카테고리 (한 번에 한 가지 모드만 적용).
-  const whereClause: SQL | undefined = isSearching
-    ? ilike(posts.title, `%${query}%`)
-    : activeTag
-      ? arrayContains(posts.tags, [activeTag])
-      : activeCategory
-        ? eq(posts.category, activeCategory)
-        : undefined;
+  // 검색·태그·카테고리는 모두 동시 적용(AND). 검색은 제목 또는 본문에 매칭되면 인정.
+  const conditions = [
+    isSearching
+      ? or(ilike(posts.title, `%${query}%`), ilike(posts.content, `%${query}%`))
+      : undefined,
+    activeTag ? arrayContains(posts.tags, [activeTag]) : undefined,
+    activeCategory ? eq(posts.category, activeCategory) : undefined,
+  ].filter((c): c is SQL => c !== undefined);
+
+  const whereClause: SQL | undefined =
+    conditions.length > 0 ? and(...conditions) : undefined;
 
   const [{ value: totalCount }] = await db
     .select({ value: count() })
@@ -104,6 +107,27 @@ export default async function Home({
     const qs = params.toString();
     return qs ? `/?${qs}` : "/";
   }
+
+  // 카테고리 탭 클릭 시 검색어·태그는 유지하고 카테고리만 갈아끼운다.
+  function hrefForCategory(key: string | undefined): string {
+    const params = new URLSearchParams();
+    if (isSearching) params.set("q", query);
+    if (activeTag) params.set("tag", activeTag);
+    if (key) params.set("category", key);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  }
+
+  // 태그 뱃지 클릭 시 함께 유지할 검색어·카테고리 (태그 자체는 뱃지 쪽에서 채운다).
+  const tagLinkExtraParams: Record<string, string> = {};
+  if (isSearching) tagLinkExtraParams.q = query;
+  if (activeCategory) tagLinkExtraParams.category = activeCategory;
+
+  const activeFilterLabels: string[] = [];
+  if (isSearching) activeFilterLabels.push(`‘${query}’ 검색`);
+  if (activeTag) activeFilterLabels.push(`태그 ‘${activeTag}’`);
+  if (activeCategory) activeFilterLabels.push(categoryLabel(activeCategory));
+  const isFiltering = activeFilterLabels.length > 0;
 
   return (
     <main className="px-4 py-8 sm:py-12">
@@ -151,8 +175,8 @@ export default async function Home({
         <nav className="flex items-center justify-between gap-4 border-b border-border-default pb-2">
           <div className="flex gap-4 overflow-x-auto">
             {tabs.map((tab) => {
-              const isActive = !isSearching && !activeTag && activeCategory === tab.key;
-              const href = tab.key ? `/?category=${tab.key}` : "/";
+              const isActive = activeCategory === tab.key;
+              const href = hrefForCategory(tab.key);
               return (
                 <Link
                   key={tab.label}
@@ -194,21 +218,15 @@ export default async function Home({
           </div>
         </nav>
 
-        {isSearching && (
+        {isFiltering && (
           <p className="text-sm text-fg-muted">
-            &lsquo;{query}&rsquo; 검색 결과 {totalCount}건
-          </p>
-        )}
-
-        {!isSearching && activeTag && (
-          <p className="text-sm text-fg-muted">
-            태그 &lsquo;{activeTag}&rsquo; 게시글 {totalCount}건
+            {activeFilterLabels.join(" · ")} 결과 {totalCount}건
           </p>
         )}
 
         {pagePosts.length === 0 ? (
           <p className="text-sm text-fg-muted py-8 text-center">
-            {isSearching ? "검색 결과가 없습니다." : "아직 글이 없습니다."}
+            {isFiltering ? "조건에 맞는 글이 없습니다." : "아직 글이 없습니다."}
           </p>
         ) : (
           <>
@@ -223,6 +241,7 @@ export default async function Home({
                     featured={featured}
                     isAdmin={isAdmin}
                     commentCount={commentCounts[`posts/${post.slug}`] ?? 0}
+                    tagExtraParams={tagLinkExtraParams}
                   />
                 );
               })}
