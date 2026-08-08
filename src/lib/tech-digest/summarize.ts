@@ -4,7 +4,7 @@ const GEMINI_MODEL = "gemini-3.5-flash";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 export type DigestPost = {
-  title: string;
+  subtitle: string;
   content: string; // 마크다운 본문
 };
 
@@ -28,7 +28,7 @@ function buildPrompt(items: DigestItem[]): string {
 - dev.to 같은 개인 블로그 플랫폼 글은 필자 개인의 주장/경험일 수 있으므로, 검증된 사실처럼 단정하지 말고 "~라고 소개한다", "~라는 접근을 제안한다"처럼 출처 기반 어조로 서술하라.
 - 비슷한 주제끼리 묶어서 소개해도 좋고, 순서대로 나열해도 좋다.
 - 전체 글은 짧은 인사말로 시작해서, 항목별 섹션(## 제목)으로 구성하고, 마지막에 간단한 마무리 문장으로 끝내라.
-- 제목은 그 주의 핵심 흐름을 담은 자연스러운 한국어 제목으로 작성하라 (예: "이번 주 개발자들이 주목한 소식").
+- subtitle 은 게시글 제목의 "- " 뒤에 붙는 부제다. 그 주의 핵심 흐름을 담아 10단어 이내 짧은 한국어 구(句)로만 작성하라 (예: "AI 에이전트 보안과 실효성 높은 개발 도구"). 완전한 문장이나 마침표는 쓰지 마라.
 
 [글 목록]
 ${itemsText}`;
@@ -53,10 +53,10 @@ export async function summarizeWeeklyTechNews(items: DigestItem[]): Promise<Dige
         responseSchema: {
           type: "object",
           properties: {
-            title: { type: "string" },
+            subtitle: { type: "string" },
             content: { type: "string" },
           },
-          required: ["title", "content"],
+          required: ["subtitle", "content"],
         },
       },
     }),
@@ -80,7 +80,7 @@ export async function summarizeWeeklyTechNews(items: DigestItem[]): Promise<Dige
   const clean = (s: string) => s.replace(/\\n/g, "\n").replace(/\\"/g, '"');
 
   return {
-    title: clean(parsed.title),
+    subtitle: clean(parsed.subtitle),
     content: clean(parsed.content),
   };
 }
