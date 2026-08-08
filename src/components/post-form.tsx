@@ -4,12 +4,15 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
+import { X } from "lucide-react";
 import {
   createPost,
   updatePost,
   type PostFormState,
 } from "@/lib/post-actions";
+import { MAX_TAGS, MAX_TAG_LENGTH } from "@/lib/post-schema";
 import MarkdownEditor from "@/components/markdown-editor";
+import { Badge } from "@/components/ui/badge";
 import { CATEGORIES } from "@/lib/categories";
 
 type PostFormProps = {
@@ -22,6 +25,7 @@ type PostFormProps = {
     thumbnail: string | null;
     series: string | null;
     seriesOrder: number | null;
+    tags: string[];
   };
 };
 
@@ -41,12 +45,47 @@ export default function PostForm({ post }: PostFormProps) {
   const [seriesOrder, setSeriesOrder] = useState(
     post?.seriesOrder != null ? String(post.seriesOrder) : "",
   );
+  const [tags, setTags] = useState<string[]>(post?.tags ?? []);
+  const [tagInput, setTagInput] = useState("");
+  const [tagError, setTagError] = useState<string | null>(null);
   const [thumbnailError, setThumbnailError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 입력값 정규화 후 태그로 추가. 엔터 입력이 유일한 추가 경로다.
+  function addTag() {
+    const value = tagInput.trim().toLowerCase();
+    setTagInput("");
+    if (!value) return;
+    if (value.length > MAX_TAG_LENGTH) {
+      setTagError(`태그는 ${MAX_TAG_LENGTH}자 이내로 입력하세요.`);
+      return;
+    }
+    if (tags.includes(value)) {
+      setTagError(null);
+      return;
+    }
+    if (tags.length >= MAX_TAGS) {
+      setTagError(`태그는 최대 ${MAX_TAGS}개까지 입력할 수 있습니다.`);
+      return;
+    }
+    setTagError(null);
+    setTags([...tags, value]);
+  }
+
+  function handleTagKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.preventDefault(); // 폼 제출 방지
+      addTag();
+    }
+  }
+
+  function removeTag(tag: string) {
+    setTags(tags.filter((t) => t !== tag));
+  }
 
   // input(파일 선택) 과 드래그앤드롭이 공유하는 업로드 로직.
   async function uploadThumbnail(file: File) {
@@ -107,6 +146,7 @@ export default function PostForm({ post }: PostFormProps) {
         thumbnail,
         series: series.trim() || null,
         seriesOrder: seriesOrder.trim() === "" ? null : Number(seriesOrder),
+        tags,
       };
       const result = isEdit
         ? await updatePost(post.id, payload)
@@ -200,6 +240,41 @@ export default function PostForm({ post }: PostFormProps) {
             <p key={msg} className="text-sm text-danger-fg">{msg}</p>
           ))}
         </div>
+      </div>
+
+      {/* 태그: 카테고리 하위 세부 분류. 엔터로 추가. */}
+      <div className="space-y-1">
+        <label className="block text-sm font-medium text-fg-default">태그</label>
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border-default bg-bg-default px-3 py-2 focus-within:border-accent-fg focus-within:ring-2 focus-within:ring-accent-fg/30 transition-colors">
+          {tags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 rounded-md border border-accent-fg/20 bg-accent-fg/15 px-2.5 py-1 text-sm text-accent-fg"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                aria-label={`${tag} 태그 제거`}
+                className="text-accent-fg/70 hover:text-accent-fg"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+          <input
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            placeholder={tags.length === 0 ? "태그 입력 후 Enter (예: react)" : ""}
+            className="h-7 min-w-24 flex-1 border-none bg-transparent text-sm text-fg-default placeholder:text-fg-muted focus:outline-none"
+          />
+        </div>
+        {tagError && <p className="text-sm text-danger-fg">{tagError}</p>}
+        {fieldErrors.tags?.map((msg) => (
+          <p key={msg} className="text-sm text-danger-fg">{msg}</p>
+        ))}
       </div>
 
       {/* 시리즈: 비워두면 단발성 글이다. */}

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { desc, eq, ilike, count, type SQL } from "drizzle-orm";
+import { desc, eq, ilike, count, arrayContains, type SQL } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { CATEGORIES, isValidCategory } from "@/lib/categories";
@@ -19,13 +19,13 @@ const PAGE_SIZE = 9;
 export async function generateMetadata({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string; q?: string; page?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
   const isSearching = (sp.q?.trim() ?? "").length > 0;
 
   return {
-    // 카테고리·페이지·검색 등 모든 쿼리 조합의 정본은 홈("/").
+    // 카테고리·태그·페이지·검색 등 모든 쿼리 조합의 정본은 홈("/").
     alternates: { canonical: "/" },
     // 검색 결과는 thin/중복 콘텐츠라 색인에서 제외 (크롤은 허용).
     robots: isSearching ? { index: false, follow: true } : undefined,
@@ -35,11 +35,12 @@ export async function generateMetadata({
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; q?: string; page?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string; q?: string; page?: string }>;
 }) {
   const sp = await searchParams;
   const query = sp.q?.trim() ?? "";
   const isSearching = query.length > 0;
+  const activeTag = sp.tag?.trim() || undefined;
 
   const session = await auth.api.getSession({ headers: await headers() });
   const isAdmin = !!session;
@@ -51,11 +52,14 @@ export default async function Home({
   const currentPage =
     Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
 
+  // 우선순위: 검색 > 태그 > 카테고리 (한 번에 한 가지 모드만 적용).
   const whereClause: SQL | undefined = isSearching
     ? ilike(posts.title, `%${query}%`)
-    : activeCategory
-      ? eq(posts.category, activeCategory)
-      : undefined;
+    : activeTag
+      ? arrayContains(posts.tags, [activeTag])
+      : activeCategory
+        ? eq(posts.category, activeCategory)
+        : undefined;
 
   const [{ value: totalCount }] = await db
     .select({ value: count() })
@@ -73,6 +77,7 @@ export default async function Home({
       content: posts.content,
       category: posts.category,
       thumbnail: posts.thumbnail,
+      tags: posts.tags,
       viewCount: posts.viewCount,
       createdAt: posts.createdAt,
     })
@@ -93,6 +98,7 @@ export default async function Home({
   function hrefForPage(page: number): string {
     const params = new URLSearchParams();
     if (isSearching) params.set("q", query);
+    if (activeTag) params.set("tag", activeTag);
     if (activeCategory) params.set("category", activeCategory);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
@@ -102,8 +108,8 @@ export default async function Home({
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-8">
-        {/* Resume 진입 히어로: 기본 랜딩(검색·카테고리·페이지네이션 아님)에서만 노출 */}
-        {!isSearching && !activeCategory && currentPage === 1 && (
+        {/* Resume 진입 히어로: 기본 랜딩(검색·카테고리·태그·페이지네이션 아님)에서만 노출 */}
+        {!isSearching && !activeTag && !activeCategory && currentPage === 1 && (
           <section className="rounded-lg border border-border-default bg-bg-subtle p-6 sm:p-8">
             <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:gap-6 sm:text-left">
               <Image
@@ -145,7 +151,7 @@ export default async function Home({
         <nav className="flex items-center justify-between gap-4 border-b border-border-default pb-2">
           <div className="flex gap-4 overflow-x-auto">
             {tabs.map((tab) => {
-              const isActive = !isSearching && activeCategory === tab.key;
+              const isActive = !isSearching && !activeTag && activeCategory === tab.key;
               const href = tab.key ? `/?category=${tab.key}` : "/";
               return (
                 <Link
@@ -191,6 +197,12 @@ export default async function Home({
         {isSearching && (
           <p className="text-sm text-fg-muted">
             &lsquo;{query}&rsquo; 검색 결과 {totalCount}건
+          </p>
+        )}
+
+        {!isSearching && activeTag && (
+          <p className="text-sm text-fg-muted">
+            태그 &lsquo;{activeTag}&rsquo; 게시글 {totalCount}건
           </p>
         )}
 

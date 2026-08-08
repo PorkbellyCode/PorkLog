@@ -17,6 +17,7 @@ import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import { extractToc } from "@/lib/toc";
 import TableOfContents from "@/components/table-of-contents";
+import TagBadges from "@/components/tag-badges";
 import PostNav from "@/components/post-nav";
 import SeriesNav from "@/components/series-nav";
 import DeletePostButton from "@/components/delete-post-button";
@@ -197,6 +198,10 @@ export default async function PostPage({
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: html }} />
         </article>
+
+        <div className="mt-6">
+          <TagBadges tags={post.tags} />
+        </div>
 
         <PostNav prev={prev} next={next} />
 

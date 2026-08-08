@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { CATEGORY_KEYS } from "@/lib/categories";
 
+export const MAX_TAGS = 10;
+export const MAX_TAG_LENGTH = 30;
+
 export const postInputSchema = z.object({
   title: z.string().trim().min(1, "제목을 입력하세요."),
   slug: z
@@ -35,6 +38,18 @@ export const postInputSchema = z.object({
     .int("회차는 정수로 입력하세요.")
     .min(1, "회차는 1 이상이어야 합니다.")
     .nullable(),
+  // 세부 분류 태그. post-form 에서 이미 정규화하지만 서버에서도 동일하게 한 번 더 정규화한다.
+  tags: z
+    .array(
+      z
+        .string()
+        .trim()
+        .min(1)
+        .max(MAX_TAG_LENGTH, `태그는 ${MAX_TAG_LENGTH}자 이내로 입력하세요.`)
+        .transform((v) => v.toLowerCase()),
+    )
+    .max(MAX_TAGS, `태그는 최대 ${MAX_TAGS}개까지 입력할 수 있습니다.`)
+    .transform((tags) => Array.from(new Set(tags))),
 })
   // 시리즈명이 없으면 회차도 의미가 없으므로 함께 비운다.
   .transform((v) => (v.series ? v : { ...v, series: null, seriesOrder: null }));

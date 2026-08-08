@@ -3,6 +3,7 @@ import Image from "next/image";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
+import TagBadges from "@/components/tag-badges";
 
 type PostCardProps = {
   post: {
@@ -12,6 +13,7 @@ type PostCardProps = {
     content: string;
     category: string;
     thumbnail: string | null;
+    tags: string[];
     viewCount: number;
     createdAt: Date;
   };
@@ -93,6 +95,8 @@ export default function PostCard({
           >
             {preview}
           </p>
+
+          <TagBadges tags={post.tags} max={3} />
 
           {/* 날짜 줄: 좌측 날짜 + 우측 액션 버튼 (mt-auto 로 카드 하단 고정) */}
           <div className="mt-auto flex items-center justify-between gap-2">
