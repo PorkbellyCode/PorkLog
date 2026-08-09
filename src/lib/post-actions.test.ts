@@ -74,6 +74,43 @@ describe("createPost", () => {
     expect(rows).toHaveLength(1);
   });
 
+  test("isPrivate/publishedAt을 지정하면 그대로 저장된다", async () => {
+    const future = new Date(Date.now() + 60_000);
+    const result = await createPost({
+      title: "예약 비공개 글",
+      slug: "scheduled-private",
+      content: "본문",
+      category: "dev",
+      thumbnail: null,
+      series: null,
+      tags: [],
+      isPrivate: true,
+      publishedAt: future,
+    });
+
+    expect(result.ok).toBe(true);
+    const [row] = await db.select().from(posts).where(eq(posts.slug, "scheduled-private"));
+    expect(row.isPrivate).toBe(true);
+    expect(row.publishedAt.getTime()).toBe(future.getTime());
+  });
+
+  test("isPrivate/publishedAt을 생략하면 공개·즉시발행으로 저장된다", async () => {
+    const result = await createPost({
+      title: "즉시공개 글",
+      slug: "immediate-public",
+      content: "본문",
+      category: "dev",
+      thumbnail: null,
+      series: null,
+      tags: [],
+    });
+
+    expect(result.ok).toBe(true);
+    const [row] = await db.select().from(posts).where(eq(posts.slug, "immediate-public"));
+    expect(row.isPrivate).toBe(false);
+    expect(row.publishedAt.getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
   test("같은 시리즈의 두 번째 글은 seriesOrder 2가 된다", async () => {
     await createPost({
       title: "1화",
@@ -154,6 +191,25 @@ describe("updatePost", () => {
     expect(result.ok).toBe(true);
     const [row] = await db.select().from(posts).where(eq(posts.id, id));
     expect(row.seriesOrder).toBeNull();
+  });
+
+  test("isPrivate를 true로 바꾸면 반영된다", async () => {
+    const id = await insertPost({ slug: "toggle-private", isPrivate: false });
+
+    const result = await updatePost(id, {
+      title: "제목",
+      slug: "toggle-private",
+      content: "본문",
+      category: "dev",
+      thumbnail: null,
+      series: null,
+      tags: [],
+      isPrivate: true,
+    });
+
+    expect(result.ok).toBe(true);
+    const [row] = await db.select().from(posts).where(eq(posts.id, id));
+    expect(row.isPrivate).toBe(true);
   });
 
   test("다른 글이 쓰는 slug로 바꾸면 실패한다", async () => {

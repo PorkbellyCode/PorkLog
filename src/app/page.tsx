@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { and, desc, eq, ilike, or, count, arrayContains, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, lte, or, count, arrayContains, type SQL } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { CATEGORIES, categoryLabel, isValidCategory } from "@/lib/categories";
@@ -53,12 +53,15 @@ export default async function Home({
     Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1;
 
   // 검색·태그·카테고리는 모두 동시 적용(AND). 검색은 제목 또는 본문에 매칭되면 인정.
+  // 비관리자에게는 비공개 글, 발행일시가 아직 안 지난(예약) 글을 추가로 숨긴다.
   const conditions = [
     isSearching
       ? or(ilike(posts.title, `%${query}%`), ilike(posts.content, `%${query}%`))
       : undefined,
     activeTag ? arrayContains(posts.tags, [activeTag]) : undefined,
     activeCategory ? eq(posts.category, activeCategory) : undefined,
+    isAdmin ? undefined : eq(posts.isPrivate, false),
+    isAdmin ? undefined : lte(posts.publishedAt, new Date()),
   ].filter((c): c is SQL => c !== undefined);
 
   const whereClause: SQL | undefined =
@@ -83,6 +86,8 @@ export default async function Home({
       tags: posts.tags,
       viewCount: posts.viewCount,
       createdAt: posts.createdAt,
+      isPrivate: posts.isPrivate,
+      publishedAt: posts.publishedAt,
     })
     .from(posts)
     .where(whereClause)

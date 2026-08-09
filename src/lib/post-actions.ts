@@ -51,6 +51,8 @@ export async function createPost(input: {
   thumbnail: string | null;
   series: string | null;
   tags: string[];
+  isPrivate?: boolean;
+  publishedAt?: Date;
 }): Promise<PostFormState> {
   await requireSession();
 
@@ -60,7 +62,8 @@ export async function createPost(input: {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail, series, tags } = parsed.data;
+  const { title, slug, content, category, thumbnail, series, tags, isPrivate, publishedAt } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -75,7 +78,18 @@ export async function createPost(input: {
 
   await db
     .insert(posts)
-    .values({ title, slug, content, category, thumbnail, series, seriesOrder, tags });
+    .values({
+      title,
+      slug,
+      content,
+      category,
+      thumbnail,
+      series,
+      seriesOrder,
+      tags,
+      isPrivate,
+      publishedAt,
+    });
 
   revalidatePath("/");
   return { ok: true };
@@ -91,6 +105,8 @@ export async function updatePost(
     thumbnail: string | null;
     series: string | null;
     tags: string[];
+    isPrivate?: boolean;
+    publishedAt?: Date;
   },
 ): Promise<PostFormState> {
   await requireSession();
@@ -101,7 +117,8 @@ export async function updatePost(
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
   }
 
-  const { title, slug, content, category, thumbnail, series, tags } = parsed.data;
+  const { title, slug, content, category, thumbnail, series, tags, isPrivate, publishedAt } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: posts.id })
@@ -133,7 +150,18 @@ export async function updatePost(
 
   await db
     .update(posts)
-    .set({ title, slug, content, category, thumbnail, series, seriesOrder, tags })
+    .set({
+      title,
+      slug,
+      content,
+      category,
+      thumbnail,
+      series,
+      seriesOrder,
+      tags,
+      isPrivate,
+      publishedAt,
+    })
     .where(eq(posts.id, id));
 
   // 썸네일이 바뀌었거나(새 URL) 제거되었으면(null) 이전 Blob 삭제.

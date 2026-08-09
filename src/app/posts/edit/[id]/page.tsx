@@ -38,6 +38,8 @@ export default async function EditPostPage({
           thumbnail: post.thumbnail,
           series: post.series,
           tags: post.tags,
+          isPrivate: post.isPrivate,
+          publishedAt: post.publishedAt,
         }}
       />
     </main>

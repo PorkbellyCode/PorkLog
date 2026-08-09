@@ -46,6 +46,10 @@ export const postInputSchema = z.object({
     )
     .max(MAX_TAGS, `태그는 최대 ${MAX_TAGS}개까지 입력할 수 있습니다.`)
     .transform((tags) => Array.from(new Set(tags))),
+  // 완전비공개. 생략 시 공개(false).
+  isPrivate: z.boolean().default(false),
+  // 발행일시. 생략 시 즉시 발행(현재 시각). 미래 값이면 예약발행.
+  publishedAt: z.coerce.date().default(() => new Date()),
 });
 
 export type PostInput = z.infer<typeof postInputSchema>;

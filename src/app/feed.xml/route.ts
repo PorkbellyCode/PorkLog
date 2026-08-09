@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { and, desc, eq, lte } from "drizzle-orm";
 import { SITE_URL, EMAIL } from "@/lib/site";
 import { extractPreview } from "@/lib/post-preview";
 
@@ -28,6 +28,7 @@ export async function GET() {
       createdAt: posts.createdAt,
     })
     .from(posts)
+    .where(and(eq(posts.isPrivate, false), lte(posts.publishedAt, new Date())))
     .orderBy(desc(posts.createdAt))
     .limit(FEED_SIZE);
 

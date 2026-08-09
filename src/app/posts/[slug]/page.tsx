@@ -91,6 +91,10 @@ export async function generateMetadata({
   const post = await getPost(slug);
   if (!post) return {};
 
+  const session = await auth.api.getSession({ headers: await headers() });
+  const isAdmin = !!session;
+  if (!isAdmin && (post.isPrivate || post.publishedAt > new Date())) return {};
+
   const image = post.thumbnail ?? defaultThumbnail(post.category);
   const description = extractPreview(post.content);
 
@@ -112,10 +116,13 @@ export default async function PostPage({
 
   if (!post) notFound();
 
-  await incrementViewCount(post.slug);
-  
   const session = await auth.api.getSession({ headers: await headers() });
   const isAdmin = !!session;
+
+  // 비공개 글, 아직 발행일시가 지나지 않은 예약 글은 관리자 외에는 직접 URL로도 접근 불가.
+  if (!isAdmin && (post.isPrivate || post.publishedAt > new Date())) notFound();
+
+  await incrementViewCount(post.slug);
 
   const html = await renderMarkdown(post.content);
   const toc = extractToc(post.content);

@@ -88,3 +88,31 @@ describe("postInputSchema - category", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("postInputSchema - isPrivate / publishedAt", () => {
+  test("생략하면 공개(false) + 현재 시각으로 기본값이 채워진다", () => {
+    const before = Date.now();
+    const result = postInputSchema.safeParse(valid);
+    const after = Date.now();
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isPrivate).toBe(false);
+      expect(result.data.publishedAt.getTime()).toBeGreaterThanOrEqual(before);
+      expect(result.data.publishedAt.getTime()).toBeLessThanOrEqual(after);
+    }
+  });
+
+  test("isPrivate=true, 미래 publishedAt 을 그대로 받는다", () => {
+    const future = new Date(Date.now() + 60_000);
+    const result = postInputSchema.safeParse({
+      ...valid,
+      isPrivate: true,
+      publishedAt: future,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.isPrivate).toBe(true);
+      expect(result.data.publishedAt.getTime()).toBe(future.getTime());
+    }
+  });
+});

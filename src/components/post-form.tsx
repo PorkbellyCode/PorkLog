@@ -25,8 +25,16 @@ type PostFormProps = {
     thumbnail: string | null;
     series: string | null;
     tags: string[];
+    isPrivate: boolean;
+    publishedAt: Date;
   };
 };
+
+// datetime-local input 은 "YYYY-MM-DDTHH:mm" (로컬 타임존, 초 단위 없음) 형식을 요구한다.
+function toDatetimeLocalValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 export default function PostForm({ post }: PostFormProps) {
   const router = useRouter();
@@ -41,6 +49,10 @@ export default function PostForm({ post }: PostFormProps) {
   );
   const [series, setSeries] = useState(post?.series ?? "");
   const [tags, setTags] = useState<string[]>(post?.tags ?? []);
+  const [isPrivate, setIsPrivate] = useState(post?.isPrivate ?? false);
+  const [publishedAt, setPublishedAt] = useState(
+    toDatetimeLocalValue(post?.publishedAt ?? new Date()),
+  );
   const [tagInput, setTagInput] = useState("");
   const [tagError, setTagError] = useState<string | null>(null);
   const [thumbnailError, setThumbnailError] = useState<string | null>(null);
@@ -141,6 +153,8 @@ export default function PostForm({ post }: PostFormProps) {
         thumbnail,
         series: series.trim() || null,
         tags,
+        isPrivate,
+        publishedAt: new Date(publishedAt),
       };
       const result = isEdit
         ? await updatePost(post.id, payload)
@@ -284,6 +298,34 @@ export default function PostForm({ post }: PostFormProps) {
         {fieldErrors.series?.map((msg) => (
           <p key={msg} className="text-sm text-danger-fg">{msg}</p>
         ))}
+      </div>
+
+      {/* 공개 설정: 발행일시(미래로 지정하면 예약발행) + 비공개 여부 */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-fg-default">발행일시</label>
+          <input
+            type="datetime-local"
+            value={publishedAt}
+            onChange={(e) => setPublishedAt(e.target.value)}
+            className={inputClass}
+          />
+          {fieldErrors.publishedAt?.map((msg) => (
+            <p key={msg} className="text-sm text-danger-fg">{msg}</p>
+          ))}
+        </div>
+
+        <div className="flex items-end pb-2.5">
+          <label className="flex items-center gap-2 text-sm font-medium text-fg-default">
+            <input
+              type="checkbox"
+              checked={isPrivate}
+              onChange={(e) => setIsPrivate(e.target.checked)}
+              className="h-4 w-4 rounded border-border-default"
+            />
+            비공개 (관리자만 열람 가능)
+          </label>
+        </div>
       </div>
 
       {/* 본문: 화면의 주 영역 */}

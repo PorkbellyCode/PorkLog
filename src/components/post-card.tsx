@@ -4,6 +4,7 @@ import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
 import TagBadges from "@/components/tag-badges";
+import { Badge } from "@/components/ui/badge";
 
 type PostCardProps = {
   post: {
@@ -16,6 +17,8 @@ type PostCardProps = {
     tags: string[];
     viewCount: number;
     createdAt: Date;
+    isPrivate: boolean;
+    publishedAt: Date;
   };
   preview: string;
   // 가장 최신 글: 3열 폭의 큰 카드.
@@ -35,6 +38,7 @@ export default function PostCard({
   tagExtraParams,
 }: PostCardProps) {
   const imageSrc = post.thumbnail ?? defaultThumbnail(post.category);
+  const isScheduled = post.publishedAt > new Date();
 
   return (
     <div
@@ -74,9 +78,25 @@ export default function PostCard({
             (featured ? " md:p-6 md:justify-center" : "")
           }
         >
-          <p className="text-xs text-fg-muted">
-            {categoryLabel(post.category)}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs text-fg-muted">
+              {categoryLabel(post.category)}
+            </p>
+            {isAdmin && post.isPrivate && (
+              <Badge variant="destructive">비공개</Badge>
+            )}
+            {isAdmin && isScheduled && (
+              <Badge variant="outline">
+                예약{" "}
+                {post.publishedAt.toLocaleString("ko-KR", {
+                  month: "numeric",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Badge>
+            )}
+          </div>
 
           {/* 제목: 클릭 시 글로 이동 */}
           <Link href={`/posts/${post.slug}`}>
