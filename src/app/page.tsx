@@ -14,7 +14,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Metadata } from "next/dist/lib/metadata/types/metadata-interface";
 
-const PAGE_SIZE = 9;
+const PAGE_SIZE = 10;
 
 export async function generateMetadata({
   searchParams,
