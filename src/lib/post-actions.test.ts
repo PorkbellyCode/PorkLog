@@ -138,6 +138,48 @@ describe("createPost", () => {
 });
 
 describe("updatePost", () => {
+  test("이미 발행된 글은 publishedAt을 미래로 바꿔도 무시된다", async () => {
+    const past = new Date(Date.now() - 60_000);
+    const id = await insertPost({ slug: "live-post", publishedAt: past });
+    const future = new Date(Date.now() + 60_000);
+
+    const result = await updatePost(id, {
+      title: "수정된 제목",
+      slug: "live-post",
+      content: "본문",
+      category: "dev",
+      thumbnail: null,
+      series: null,
+      tags: [],
+      publishedAt: future,
+    });
+
+    expect(result.ok).toBe(true);
+    const [row] = await db.select().from(posts).where(eq(posts.id, id));
+    expect(row.publishedAt.getTime()).toBe(past.getTime());
+  });
+
+  test("아직 발행 전(미래 publishedAt)인 글은 예약 시각을 다시 조정할 수 있다", async () => {
+    const originalFuture = new Date(Date.now() + 60_000);
+    const id = await insertPost({ slug: "not-yet-live", publishedAt: originalFuture });
+    const newFuture = new Date(Date.now() + 120_000);
+
+    const result = await updatePost(id, {
+      title: "제목",
+      slug: "not-yet-live",
+      content: "본문",
+      category: "dev",
+      thumbnail: null,
+      series: null,
+      tags: [],
+      publishedAt: newFuture,
+    });
+
+    expect(result.ok).toBe(true);
+    const [row] = await db.select().from(posts).where(eq(posts.id, id));
+    expect(row.publishedAt.getTime()).toBe(newFuture.getTime());
+  });
+
   test("시리즈가 그대로면 seriesOrder를 유지한다", async () => {
     const id = await insertPost({ slug: "keep-series", series: "시리즈A", seriesOrder: 3 });
 

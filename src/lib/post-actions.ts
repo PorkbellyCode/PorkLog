@@ -129,12 +129,13 @@ export async function updatePost(
     return { formError: "이미 사용 중인 slug 입니다." };
   }
 
-  // 교체/제거된 옛 썸네일 삭제, 시리즈 변경 여부 판단을 위해 변경 전 값을 읽어둔다.
+  // 교체/제거된 옛 썸네일 삭제, 시리즈 변경 여부 판단, 이미 발행된 글인지 확인을 위해 변경 전 값을 읽어둔다.
   const [current] = await db
     .select({
       thumbnail: posts.thumbnail,
       series: posts.series,
       seriesOrder: posts.seriesOrder,
+      publishedAt: posts.publishedAt,
     })
     .from(posts)
     .where(eq(posts.id, id));
@@ -148,6 +149,11 @@ export async function updatePost(
         ? await getNextSeriesOrder(series)
         : null;
 
+  // 이미 발행 시각이 지난(=한 번이라도 공개됐던) 글은 예약발행 대상이 아니므로
+  // 수정 화면에서 넘어온 publishedAt 은 무시하고 기존 값을 유지한다.
+  const alreadyPublished = !!current && current.publishedAt <= new Date();
+  const effectivePublishedAt = alreadyPublished ? current.publishedAt : publishedAt;
+
   await db
     .update(posts)
     .set({
@@ -160,7 +166,7 @@ export async function updatePost(
       seriesOrder,
       tags,
       isPrivate,
-      publishedAt,
+      publishedAt: effectivePublishedAt,
     })
     .where(eq(posts.id, id));
 

@@ -39,6 +39,9 @@ function toDatetimeLocalValue(date: Date): string {
 export default function PostForm({ post }: PostFormProps) {
   const router = useRouter();
   const isEdit = post !== undefined;
+  // 이미 발행 시각이 지난(=한 번이라도 공개됐던) 글은 서버에서 발행일시 변경을 무시하므로,
+  // 폼에서도 미리 비활성화해서 안 바뀌는 값을 바꾼 것처럼 보이지 않게 한다.
+  const alreadyPublished = isEdit && post.publishedAt <= new Date();
 
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
@@ -308,8 +311,14 @@ export default function PostForm({ post }: PostFormProps) {
             type="datetime-local"
             value={publishedAt}
             onChange={(e) => setPublishedAt(e.target.value)}
-            className={inputClass}
+            disabled={alreadyPublished}
+            className={inputClass + (alreadyPublished ? " opacity-50" : "")}
           />
+          {alreadyPublished && (
+            <p className="text-sm text-fg-muted">
+              이미 발행된 글은 발행일시를 변경할 수 없습니다.
+            </p>
+          )}
           {fieldErrors.publishedAt?.map((msg) => (
             <p key={msg} className="text-sm text-danger-fg">{msg}</p>
           ))}
