@@ -8,7 +8,7 @@ export const auth = betterAuth({
   // 요청 호스트를 allowedHosts 와 대조해 요청별 base URL 을 구성하므로
   // 배포마다 BETTER_AUTH_URL 을 바꿀 필요가 없다.
   baseURL: {
-    allowedHosts: ["localhost:3000", "*.vercel.app"],
+    allowedHosts: ["localhost:3000", "*.vercel.app", "porklog.dev", "www.porklog.dev"],
     protocol: process.env.NODE_ENV === "development" ? "http" : "https",
   },
   database: drizzleAdapter(db, {
