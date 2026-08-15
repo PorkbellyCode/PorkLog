@@ -2,8 +2,13 @@ import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { postInputSchema } from "@/lib/post-schema";
 import type { DigestPost } from "./summarize";
+
+// 큐레이션 게시글은 항상 이 시리즈/태그로 고정한다.
+const DIGEST_SERIES = "dev-news";
+const DIGEST_TAG = "dev-news";
 
 function todaySlug(): string {
   const kstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
@@ -24,13 +29,17 @@ export async function createDigestPost(post: DigestPost): Promise<CreateDigestRe
     return { status: "skipped", reason: "duplicate_slug", slug };
   }
 
+  // postInputSchema 의 입력 타입을 그대로 만족시켜서, 이후 스키마에 필수 필드가
+  // 추가되면(이번 series/tags 처럼) 여기서 컴파일 에러로 바로 드러나게 한다.
   const parsed = postInputSchema.parse({
     title: `이번 주 개발자 뉴스 - ${post.subtitle}`,
     slug,
     content: post.content,
     category: "dev",
     thumbnail: null,
-  });
+    series: DIGEST_SERIES,
+    tags: [DIGEST_TAG],
+  } satisfies z.input<typeof postInputSchema>);
 
   await db.insert(posts).values(parsed);
 
