@@ -127,7 +127,7 @@ export const sideProjects: Project[] = [
     images: [],
     links: [
       { label: "GitHub", url: "https://github.com/PorkbellyCode/PorkLog" },
-      { label: "라이브", url: "https://pork-log.vercel.app" },
+      { label: "라이브", url: "https://porklog.dev" },
     ],
   },
 ];
