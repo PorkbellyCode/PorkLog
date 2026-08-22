@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -44,6 +45,9 @@ export default function RootLayout({
           </div>
           <Toaster />
         </ThemeProvider>
+        {process.env.NODE_ENV === "production" && process.env.GA_MEASUREMENT_ID && (
+          <GoogleAnalytics gaId={process.env.GA_MEASUREMENT_ID} />
+        )}
       </body>
     </html>
   );

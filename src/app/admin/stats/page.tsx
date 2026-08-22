@@ -8,6 +8,7 @@ import {
   getVisitSummary,
   getVisitTrend,
 } from "@/lib/admin-stats";
+import { getTrafficByChannel, getTrafficByDevice } from "@/lib/ga-stats";
 import {
   Card,
   CardDescription,
@@ -59,11 +60,20 @@ export default async function AdminStatsPage({
 }
 
 async function StatsContent({ days }: { days: number }) {
-  const [visitSummary, postSummary, visitTrend, topPosts] = await Promise.all([
+  const [
+    visitSummary,
+    postSummary,
+    visitTrend,
+    topPosts,
+    trafficByChannel,
+    trafficByDevice,
+  ] = await Promise.all([
     getVisitSummary(),
     getPostSummary(),
     getVisitTrend(days),
     getTopPosts(10),
+    getTrafficByChannel(days),
+    getTrafficByDevice(days),
   ]);
 
   return (
@@ -122,6 +132,80 @@ async function StatsContent({ days }: { days: number }) {
           </Table>
         </div>
       </Card>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>유입경로</CardTitle>
+            <CardDescription>
+              Google Analytics 기준, 최근 {days}일
+            </CardDescription>
+          </CardHeader>
+          <div className="px-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>채널</TableHead>
+                  <TableHead className="text-right">세션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {trafficByChannel.map((row) => (
+                  <TableRow key={row.channel}>
+                    <TableCell>{row.channel}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {row.sessions.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {trafficByChannel.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={2} className="py-8 text-center text-fg-muted">
+                      아직 데이터가 없습니다.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>기기별 세션</CardTitle>
+            <CardDescription>
+              Google Analytics 기준, 최근 {days}일
+            </CardDescription>
+          </CardHeader>
+          <div className="px-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>기기</TableHead>
+                  <TableHead className="text-right">세션</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {trafficByDevice.map((row) => (
+                  <TableRow key={row.device}>
+                    <TableCell>{row.device}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {row.sessions.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {trafficByDevice.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={2} className="py-8 text-center text-fg-muted">
+                      아직 데이터가 없습니다.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -147,6 +231,10 @@ function StatsSkeleton() {
       </div>
       <Skeleton className="h-80 rounded-xl" />
       <Skeleton className="h-96 rounded-xl" />
+      <div className="grid gap-6 md:grid-cols-2">
+        <Skeleton className="h-72 rounded-xl" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
     </div>
   );
 }
