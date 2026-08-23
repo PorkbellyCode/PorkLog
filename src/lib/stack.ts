@@ -16,6 +16,7 @@ export const skillCategories: { category: string; items: Skill[] }[] = [
       { name: "JavaScript", icon: "javascript", level: 3 },
       { name: "Next.js", icon: "nextjs", level: 3 },
       { name: "Tailwind CSS", icon: "tailwindcss", level: 3 },
+      { name: "shadcn/ui", icon: "shadcnui", level: 2 },
     ],
   },
   {
@@ -24,6 +25,14 @@ export const skillCategories: { category: string; items: Skill[] }[] = [
       { name: "Java", icon: "java", level: 3 },
       { name: "Spring Boot", icon: "springboot", level: 3 },
     ],
+  },
+  {
+    category: "Auth",
+    items: [{ name: "Auth.js", icon: "authdotjs", level: 2 }],
+  },
+  {
+    category: "AI",
+    items: [{ name: "OpenAI API", icon: "openai", level: 2 }],
   },
   {
     category: "Database",
