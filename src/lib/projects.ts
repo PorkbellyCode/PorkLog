@@ -173,6 +173,9 @@ export const sideProjects: Project[] = [
       "Vercel",
     ],
     images: [],
-    links: [{ label: "GitHub", url: "https://github.com/PorkbellyCode/workwrap" }],
+    links: [
+      { label: "GitHub", url: "https://github.com/PorkbellyCode/workwrap" },
+      { label: "라이브", url: "https://workwrap-ochre.vercel.app" },
+    ],
   },
 ];
