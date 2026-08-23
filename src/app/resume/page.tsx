@@ -31,6 +31,10 @@ const STRENGTHS = [
     title: "품질과 보안 의식",
     desc: "정적분석 기반 예외처리, 보안 취약점 조치, 다수의 결함 개선 완수 등 코드 품질과 보안을 챙깁니다.",
   },
+  {
+    title: "AI 활용 개발",
+    desc: "Claude Code 등 AI 코딩 도구를 실무에 접목해 생산성을 높이고, PorkLog의 AI 기반 주간 Tech 뉴스 큐레이션 기능을 직접 설계·구현했습니다.",
+  },
 ];
 
 export default function ResumePage() {
@@ -70,7 +74,7 @@ export default function ResumePage() {
 
         {/* 경력 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">경력</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">경력</h2>
           <div className="flex items-start gap-3 rounded-lg border border-border-default bg-bg-subtle p-4">
             <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true" className="mt-0.5 shrink-0 text-fg-muted">
               <path d="M6.75 0h2.5C10.216 0 11 .784 11 1.75V3h2.25c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 13.25 15H2.75A1.75 1.75 0 0 1 1 13.25v-8.5C1 3.784 1.784 3 2.75 3H5V1.75C5 .784 5.784 0 6.75 0Zm-.25 3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Zm-3.75 1.5a.25.25 0 0 0-.25.25v2.5h11v-2.5a.25.25 0 0 0-.25-.25Zm10.5 4.25h-11v4.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25Z" />
@@ -84,7 +88,7 @@ export default function ResumePage() {
 
         {/* 학력 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">학력</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">학력</h2>
           <div className="flex items-start gap-3 rounded-lg border border-border-default bg-bg-subtle p-4">
             <svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true" className="mt-0.5 shrink-0 text-fg-muted">
               <path d="M8.211.146a.75.75 0 0 0-.422 0l-7 2.1A.75.75 0 0 0 .5 2.974v.526a.75.75 0 0 0 .75.75h13.5a.75.75 0 0 0 .75-.75v-.526a.75.75 0 0 0-.289-.728l-7-2.1ZM2.5 5.75a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0Zm4 0a.75.75 0 0 0-1.5 0v6.5a.75.75 0 0 0 1.5 0ZM1.5 15.25a.75.75 0 0 1 .75-.75h11.5a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1-.75-.75Z" />
@@ -98,14 +102,14 @@ export default function ResumePage() {
 
         {/* 기술 스택 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">기술 스택</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">기술 스택</h2>
           <SkillStack />
         </section>
 
         {/* 강점 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">강점</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">강점</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
             {STRENGTHS.map((s) => (
               <div key={s.title} className="rounded-lg border border-border-default bg-bg-default p-4">
                 <p className="text-sm font-semibold text-fg-default">{s.title}</p>
@@ -117,19 +121,19 @@ export default function ResumePage() {
 
         {/* 프로젝트 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">프로젝트</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">프로젝트</h2>
           <ProjectAccordion projects={projects} />
         </section>
 
         {/* 사이드 프로젝트 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">사이드 프로젝트</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">사이드 프로젝트</h2>
           <ProjectAccordion projects={sideProjects} />
         </section>
 
         {/* 연락처 */}
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-fg-default">연락처</h2>
+          <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">연락처</h2>
           <div className="flex flex-wrap gap-2">
             {[
               {
