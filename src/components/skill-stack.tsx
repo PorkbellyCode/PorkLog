@@ -1,41 +1,24 @@
-import { skillCategories, type SkillLevel } from "@/lib/stack";
-
-const levelClass: Record<SkillLevel, string> = {
-  3: "bg-accent-fg/15 text-accent-fg border-accent-fg/20",
-  2: "bg-bg-subtle text-fg-default border-border-default",
-  1: "bg-transparent text-fg-muted border-border-default",
-};
+import { skillCategories } from "@/lib/stack";
+import SkillBadge from "@/components/skill-badge";
 
 export default function SkillStack() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {skillCategories.map((group) => (
         <div key={group.category} className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-fg-muted">
+          <p className="text-xs font-semibold uppercase tracking-wide text-fg-default">
             {group.category}
           </p>
-          <div className="flex flex-wrap gap-2">
-            {group.items.map((skill) => (
-              <span
-                key={skill.name}
-                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-sm ${levelClass[skill.level]}`}
-              >
-                <span
-                  aria-hidden="true"
-                  className="h-4 w-4 shrink-0 bg-current"
-                  style={{
-                    maskImage: `url(/icons/${skill.icon}.svg)`,
-                    WebkitMaskImage: `url(/icons/${skill.icon}.svg)`,
-                    maskRepeat: "no-repeat",
-                    WebkitMaskRepeat: "no-repeat",
-                    maskSize: "contain",
-                    WebkitMaskSize: "contain",
-                    maskPosition: "center",
-                    WebkitMaskPosition: "center",
-                  }}
-                />
-                {skill.name}
-              </span>
+          <div className="space-y-1.5">
+            {group.groups.map((g) => (
+              <div key={g.label} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                <p className="w-32 shrink-0 text-xs text-fg-muted">{g.label}</p>
+                <div className="flex flex-wrap gap-2">
+                  {g.items.map((skill) => (
+                    <SkillBadge key={skill.name} name={skill.name} />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

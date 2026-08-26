@@ -3,6 +3,7 @@
 import * as Accordion from "@radix-ui/react-accordion";
 import Image from "next/image";
 import type { Project } from "@/lib/projects";
+import SkillBadge from "@/components/skill-badge";
 
 export default function ProjectAccordion({ projects }: { projects: Project[] }) {
   return (
@@ -72,13 +73,8 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
               <div className="mt-4">
                 <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">사용 기술</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {project.tech.map((t, j) => (
-                    <span
-                      key={j}
-                      className="rounded-md border border-border-default bg-bg-subtle px-2 py-0.5 text-xs text-fg-muted"
-                    >
-                      {t}
-                    </span>
+                  {project.tech.map((t) => (
+                    <SkillBadge key={t} name={t} />
                   ))}
                 </div>
               </div>

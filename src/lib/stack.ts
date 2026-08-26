@@ -1,66 +1,100 @@
-export type SkillLevel = 1 | 2 | 3; // 3=주력, 2=보통, 1=입문
-
 export type Skill = {
   name: string;
-  icon: string; // public/icons/ 파일명(확장자 제외)
-  level: SkillLevel;
+  icon?: string; // public/icons/ 파일명(확장자 제외). 없으면 텍스트만 표시
 };
 
-export const skillCategories: { category: string; items: Skill[] }[] = [
+export type SkillGroup = {
+  label: string;
+  items: Skill[];
+};
+
+export type SkillCategory = {
+  category: string;
+  groups: SkillGroup[];
+};
+
+// 기술스택 밖의 기술(프로젝트 사용기술 등)에 대한 아이콘 보충 매핑
+const extraIcons: Record<string, string> = {
+  "Better Auth": "betterauth",
+  "Auth.js": "authdotjs",
+  "OpenAI API": "openai",
+  ".NET Framework": "dotnet",
+  Blazor: "blazor",
+};
+
+// 기술명으로 아이콘 파일명을 찾는다. 없으면 undefined.
+export function getSkillIcon(name: string): string | undefined {
+  if (extraIcons[name]) return extraIcons[name];
+  for (const category of skillCategories) {
+    for (const group of category.groups) {
+      const found = group.items.find((s) => s.name === name);
+      if (found) return found.icon;
+    }
+  }
+  return undefined;
+}
+
+export const skillCategories: SkillCategory[] = [
   {
     category: "Frontend",
-    items: [
-      { name: "React", icon: "react", level: 3 },
-      { name: "TypeScript", icon: "typescript", level: 3 },
-      { name: "Vue.js", icon: "vue", level: 3 },
-      { name: "JavaScript", icon: "javascript", level: 3 },
-      { name: "Next.js", icon: "nextjs", level: 3 },
-      { name: "Tailwind CSS", icon: "tailwindcss", level: 3 },
-      { name: "shadcn/ui", icon: "shadcnui", level: 2 },
+    groups: [
+      {
+        label: "Languages",
+        items: [
+          { name: "TypeScript", icon: "typescript" },
+          { name: "JavaScript", icon: "javascript" },
+        ],
+      },
+      {
+        label: "Frameworks",
+        items: [
+          { name: "Next.js", icon: "nextjs" },
+          { name: "Vue.js", icon: "vue" },
+        ],
+      },
+      {
+        label: "Libraries / Tools",
+        items: [
+          { name: "React", icon: "react" },
+          { name: "Tailwind CSS", icon: "tailwindcss" },
+          { name: "shadcn/ui", icon: "shadcnui" },
+          { name: "Vitest", icon: "vitest" },
+        ],
+      },
     ],
   },
   {
     category: "Backend",
-    items: [
-      { name: "Java", icon: "java", level: 3 },
-      { name: "Spring Boot", icon: "springboot", level: 3 },
+    groups: [
+      { label: "Languages", items: [{ name: "Java", icon: "java" }] },
+      { label: "Frameworks", items: [{ name: "Spring Boot", icon: "springboot" }] },
+      {
+        label: "ORMs",
+        items: [{ name: "MyBatis" }, { name: "JPA" }, { name: "Drizzle", icon: "drizzle" }],
+      },
     ],
-  },
-  {
-    category: "Auth",
-    items: [{ name: "Auth.js", icon: "authdotjs", level: 2 }],
-  },
-  {
-    category: "AI",
-    items: [{ name: "OpenAI API", icon: "openai", level: 2 }],
   },
   {
     category: "Database",
-    items: [
-      { name: "Oracle", icon: "oracle", level: 3 },
-      { name: "MariaDB", icon: "mariadb", level: 3 },
-      { name: "MSSQL", icon: "mssql", level: 3 },
-      { name: "PostgreSQL", icon: "postgresql", level: 3 },
-      { name: "Neon", icon: "neon", level: 3 },
-      { name: "Redis", icon: "redis", level: 3 },
-      { name: "Drizzle ORM", icon: "drizzle", level: 3 },
+    groups: [
+      {
+        label: "Engines",
+        items: [
+          { name: "PostgreSQL", icon: "postgresql" },
+          { name: "Oracle", icon: "oracle" },
+          { name: "MSSQL", icon: "mssql" },
+          { name: "MariaDB", icon: "mariadb" },
+          { name: "Redis", icon: "redis" },
+        ],
+      },
     ],
   },
   {
-    category: "Cloud",
-    items: [
-      { name: "Vercel", icon: "vercel", level: 2 },
-      { name: "AWS", icon: "aws", level: 1 },
-    ],
-  },
-  {
-    category: "DevOps",
-    items: [
-      { name: "Docker", icon: "docker", level: 2 },
-      { name: "GitHub Actions", icon: "githubactions", level: 2 },
-      { name: "Nginx", icon: "nginx", level: 1 },
-      { name: "Jenkins", icon: "jenkins", level: 1 },
-      { name: "Ubuntu", icon: "ubuntu", level: 1 },
+    category: "Cloud & DevOps",
+    groups: [
+      { label: "Platforms", items: [{ name: "Vercel", icon: "vercel" }, { name: "Neon", icon: "neon" }] },
+      { label: "CI/CD", items: [{ name: "GitHub Actions", icon: "githubactions" }] },
+      { label: "Tools", items: [{ name: "Docker", icon: "docker" }] },
     ],
   },
 ];
