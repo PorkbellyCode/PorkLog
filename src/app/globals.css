@@ -133,27 +133,24 @@ kbd {
   content: "";
 }
 
-/* prose(마크다운 본문) 다크 모드 자동 반전.
- * 상세 페이지의 <article class="prose"> 가 다크에서 흰 글씨로 보이게 한다.
- * (2단계에서 페이지별 색 토큰을 직접 적용하기 전의 전역 기본값) */
+/* prose(마크다운 본문) 다크 모드 반전.
+ * @tailwindcss/typography 는 요소별 색을 --tw-prose-* 변수로 참조한다.
+ * 요소를 하나씩 덮어쓰면 목록에서 빠진 요소(thead th 등)가 라이트 값으로
+ * 남으므로, 변수 자체를 사이트 색 토큰에 매핑한다.
+ * pre/pre-bg 는 rehype-pretty-code(shiki)가 인라인 style 로 직접 지정하므로 제외. */
 .dark .prose {
-  color: var(--fg-default);
-}
-.dark .prose :where(h1, h2, h3, h4, h5, h6, strong) {
-  color: var(--fg-default);
-}
-.dark .prose :where(a) {
-  color: var(--accent-fg);
-}
-.dark .prose :where(code) {
-  color: var(--fg-default);
-}
-.dark .prose :where(blockquote) {
-  color: var(--fg-muted);
-  border-left-color: var(--border-default);
-}
-.dark .prose :where(hr) {
-  border-color: var(--border-default);
+  --tw-prose-body: var(--fg-default);
+  --tw-prose-headings: var(--fg-default);
+  --tw-prose-links: var(--accent-fg);
+  --tw-prose-bold: var(--fg-default);
+  --tw-prose-code: var(--fg-default);
+  --tw-prose-counters: var(--fg-muted);
+  --tw-prose-bullets: var(--fg-muted);
+  --tw-prose-hr: var(--border-default);
+  --tw-prose-quotes: var(--fg-muted);
+  --tw-prose-quote-borders: var(--border-default);
+  --tw-prose-th-borders: var(--border-default);
+  --tw-prose-td-borders: var(--border-muted);
 }
 
 /* ─────────────────────────────────────────────────────────────

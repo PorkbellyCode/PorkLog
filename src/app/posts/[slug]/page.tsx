@@ -5,13 +5,7 @@ import { posts } from "@/db/schema";
 import { eq, sql, lt, gt, desc, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkRehype from "remark-rehype";
-import rehypeSlug from "rehype-slug";
-import rehypePrettyCode from "rehype-pretty-code";
-import rehypeStringify from "rehype-stringify";
+import { renderMarkdown } from "@/lib/markdown";
 import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
@@ -39,19 +33,6 @@ async function incrementViewCount(slug: string) {
     .update(posts)
     .set({ viewCount: sql`${posts.viewCount} + 1` })
     .where(eq(posts.slug, slug));
-}
-
-async function renderMarkdown(markdown: string): Promise<string> {
-  const file = await unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .use(remarkRehype)
-    // 목차 앵커용 heading id. extractToc 와 같은 github-slugger 를 쓴다.
-    .use(rehypeSlug)
-    .use(rehypePrettyCode, { theme: "github-dark" })
-    .use(rehypeStringify)
-    .process(markdown);
-  return String(file);
 }
 
 // 작성일 기준 인접 글. prev = 더 오래된 글, next = 더 최신 글.

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import "@uiw/react-md-editor/markdown-editor.css";
 
@@ -31,6 +31,32 @@ export default function MarkdownEditor({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [previewHtml, setPreviewHtml] = useState("");
+
+    // 미리보기를 에디터 내장 렌더러가 아니라 상세 페이지와 같은 서버 렌더러로 그린다.
+    // 타이핑마다 요청하지 않도록 400ms 디바운스하고, 늦게 도착한 응답이 최신 결과를
+    // 덮어쓰지 않도록 cancelled 로 막는다.
+    useEffect(() => {
+        let cancelled = false;
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch("/api/preview", {
+                    method: "POST",
+                    headers: { "content-type": "application/json" },
+                    body: JSON.stringify({ markdown: value }),
+                });
+                if (!res.ok) return;
+                const { html } = (await res.json()) as { html: string };
+                if (!cancelled) setPreviewHtml(html);
+            } catch {
+                // 미리보기 실패는 편집을 막지 않는다. 직전 결과를 그대로 둔다.
+            }
+        }, 400);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [value]);
 
     async function uploadImage(file: File): Promise<string | null> {
         try {
@@ -98,6 +124,16 @@ export default function MarkdownEditor({
                         ? { ...command, execute: () => fileInputRef.current?.click() }
                         : command
                 }
+                // 미리보기 내용만 서버 렌더 결과로 교체한다. 패널 표시 모드,
+                // 크기 조절, 스크롤 동기화는 에디터 기본 동작 그대로 유지된다.
+                components={{
+                    preview: () => (
+                        <div
+                            className="prose max-w-none"
+                            dangerouslySetInnerHTML={{ __html: previewHtml }}
+                        />
+                    ),
+                }}
                 textareaProps={{
                     onDragOver: (e) => {
                         if (e.dataTransfer?.types?.includes("Files")) e.preventDefault();
