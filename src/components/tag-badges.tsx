@@ -9,7 +9,7 @@ type TagBadgesProps = {
 };
 
 const tagClass =
-  "inline-flex items-center rounded-md border border-accent-fg/20 bg-accent-fg/15 px-2.5 py-1 text-sm text-accent-fg transition-colors hover:bg-accent-fg/25";
+  "text-sm text-accent-fg transition-colors hover:underline hover:underline-offset-4";
 
 function tagHref(tag: string, extraParams?: Record<string, string>): string {
   const params = new URLSearchParams(extraParams);
@@ -24,16 +24,14 @@ export default function TagBadges({ tags, max, extraParams }: TagBadgesProps) {
   const hiddenCount = max ? Math.max(0, tags.length - max) : 0;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-x-3 gap-y-1">
       {visible.map((tag) => (
         <Link key={tag} href={tagHref(tag, extraParams)} className={tagClass}>
-          {tag}
+          #{tag}
         </Link>
       ))}
       {hiddenCount > 0 && (
-        <span className="inline-flex items-center rounded-md border border-border-default bg-bg-subtle px-2.5 py-1 text-sm text-fg-muted">
-          +{hiddenCount}
-        </span>
+        <span className="text-sm text-fg-muted">+{hiddenCount}</span>
       )}
     </div>
   );

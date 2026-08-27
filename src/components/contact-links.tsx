@@ -3,8 +3,9 @@
 import { toast } from "sonner";
 import { EMAIL, GITHUB_URL, SITE_URL } from "@/lib/site";
 
+// 홈 히어로의 연락처 링크와 같은 형식. 인쇄를 감안해 크기만 한 단계 크게 둔다.
 const chipClass =
-  "inline-flex cursor-pointer items-center gap-2 rounded-md border border-border-default bg-bg-subtle px-3 py-1.5 text-sm transition-colors hover:border-fg-muted/40";
+  "inline-flex cursor-pointer items-center gap-1.5 font-mono text-sm text-fg-muted transition-colors hover:text-accent-fg";
 
 const LINKS = [
   {
@@ -41,22 +42,18 @@ function EmailChip() {
         height="16"
         fill="currentColor"
         aria-hidden="true"
-        className="shrink-0 text-fg-muted"
+        className="shrink-0"
       >
         <path d="M1.75 2A1.75 1.75 0 0 0 0 3.75v8.5C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0 0 16 12.25v-8.5A1.75 1.75 0 0 0 14.25 2Zm12.5 1.5a.25.25 0 0 1 .25.25v.852l-6 3.96-6-3.96V3.75a.25.25 0 0 1 .25-.25ZM1.5 5.81v6.44c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V5.81l-5.815 3.84a.75.75 0 0 1-.87 0Z" />
       </svg>
-      <span className="font-medium text-fg-default">이메일</span>
-      <span aria-hidden="true" className="text-xs text-fg-muted">
-        ·
-      </span>
-      <span className="text-xs text-fg-muted">{EMAIL}</span>
+      {EMAIL}
     </button>
   );
 }
 
 export default function ContactLinks() {
   return (
-    <div className="flex flex-wrap gap-2 pt-1">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
       {LINKS.map((c) => (
         <a
           key={c.label}
@@ -70,15 +67,11 @@ export default function ContactLinks() {
             height="16"
             fill="currentColor"
             aria-hidden="true"
-            className="shrink-0 text-fg-muted"
+            className="shrink-0"
           >
             <path d={c.path} />
           </svg>
-          <span className="font-medium text-fg-default">{c.label}</span>
-          <span aria-hidden="true" className="text-xs text-fg-muted">
-            ·
-          </span>
-          <span className="text-xs text-fg-muted">{c.display}</span>
+          {c.display}
         </a>
       ))}
       <EmailChip />

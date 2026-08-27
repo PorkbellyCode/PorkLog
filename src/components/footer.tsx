@@ -19,7 +19,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-border-default print:hidden">
       <div className="flex flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-fg-muted sm:flex-row">
-        <p>© {new Date().getFullYear()} PorkLog</p>
+        <p>© {new Date().getFullYear()} <span className="font-display">PorkLog</span></p>
 
         <div className="flex items-center gap-2">
           {LINKS.map((l) => (

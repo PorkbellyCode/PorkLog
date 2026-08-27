@@ -5,7 +5,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ─────────────────────────────────────────────────────────────
- * 색상 토큰 - GitHub Primer 톤 참고
+ * 색상 토큰 - 웜 뉴트럴 + 오렌지 액센트
  * 컴포넌트 클래스에서 bg-default / text-default 처럼 참조한다.
  * ───────────────────────────────────────────────────────────── */
 @theme {
@@ -16,10 +16,13 @@
   --color-border-default: var(--border-default);
   --color-border-muted: var(--border-muted);
   --color-accent-fg: var(--accent-fg);
+  /* 장식용 오렌지. 대형 제목 강조·hover·테두리처럼 본문 대비 기준이
+   * 걸리지 않는 곳에만 쓴다. 텍스트에는 --accent-fg 를 쓸 것. */
+  --color-accent-brand: var(--accent-brand);
   --color-danger-fg: var(--danger-fg);
 
   /* shadcn/ui 컴포넌트(button, badge, card, table, tabs, select, chart 등)가
-   * 참조하는 시맨틱 토큰. 위 Primer 톤 토큰에 매핑해 별도 팔레트 없이 톤을 통일한다. */
+   * 참조하는 시맨틱 토큰. 위 사이트 토큰에 매핑해 별도 팔레트 없이 톤을 통일한다. */
   --color-background: var(--bg-default);
   --color-foreground: var(--fg-default);
   --color-card: var(--bg-default);
@@ -51,23 +54,33 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* GitHub.com 과 동일한 시스템 폰트 스택.
-   * 외부 폰트 로딩 없이 OS 기본 폰트를 그대로 사용한다. */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+  /* 웹폰트 변수는 layout.tsx 의 next/font 가 <html> 에 심는다.
+   * 로딩 실패 시를 대비해 뒤에 시스템 스택을 남겨둔다. */
+
+  /* 제목용 에디토리얼 세리프. 라틴은 Fraunces, 한글은 Noto Serif KR 로
+   * 브라우저가 글리프 단위 폴백한다. */
+  --font-display: var(--font-fraunces), var(--font-noto-serif-kr), Georgia,
+    "Times New Roman", serif;
+  --font-sans: var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular,
+    "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 /* 라이트 모드 */
 :root {
   --bg-default: #ffffff;
-  --bg-subtle: #f6f8fa;
-  --fg-default: #1f2328;
-  --fg-muted: #59636e;
-  --border-default: #d1d9e0;
-  --border-muted: #d1d9e0b3;
-  --accent-fg: #0969da;
+  --bg-subtle: #f7f6f3;
+  --fg-default: #0f0f0e;
+  /* 시안의 #888580 은 흰 배경 대비 3.7:1 로 본문 기준(4.5:1) 미달이라
+   * 색조는 유지한 채 어둡게 조정했다. (5.6:1) */
+  --fg-muted: #6b6862;
+  --border-default: #e8e7e3;
+  --border-muted: #e8e7e3b3;
+  /* 본문 링크·버튼 채움 등 텍스트 대비가 걸리는 자리용. 흰 배경 대비 4.9:1. */
+  --accent-fg: #be4c22;
+  --accent-brand: #e85d2a;
   --danger-fg: #d1242f;
   --radius: 0.375rem;
 
@@ -81,13 +94,16 @@
 
 /* 다크 모드 */
 .dark {
-  --bg-default: #0d1117;
-  --bg-subtle: #151b23;
-  --fg-default: #f0f6fc;
-  --fg-muted: #9198a1;
-  --border-default: #3d444d;
-  --border-muted: #3d444db3;
-  --accent-fg: #4493f8;
+  --bg-default: #0d0d0d;
+  --bg-subtle: #161616;
+  --fg-default: #f0ede8;
+  --fg-muted: #888580;
+  --border-default: #2a2a2a;
+  --border-muted: #2a2a2ab3;
+  /* 어두운 배경에서는 #e85d2a 가 5.6:1 로 본문 기준을 통과하므로
+   * 라이트 모드와 달리 텍스트용과 장식용을 나눌 필요가 없다. */
+  --accent-fg: #e85d2a;
+  --accent-brand: #e85d2a;
   --danger-fg: #f85149;
 
   /* 통계 차트용 팔레트. GitHub Primer 다크 톤. */
@@ -162,11 +178,12 @@ kbd {
   .dark {
     --bg-default: #ffffff;
     --bg-subtle: #ffffff;
-    --fg-default: #1f2328;
-    --fg-muted: #59636e;
-    --border-default: #d1d9e0;
-    --border-muted: #d1d9e0;
-    --accent-fg: #0969da;
+    --fg-default: #0f0f0e;
+    --fg-muted: #6b6862;
+    --border-default: #e8e7e3;
+    --border-muted: #e8e7e3;
+    --accent-fg: #be4c22;
+    --accent-brand: #be4c22;
   }
 
   /* Radix Accordion 이 forceMount 로 남겨둔 닫힌 항목까지 모두 펼쳐 인쇄한다. */

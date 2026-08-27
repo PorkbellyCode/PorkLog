@@ -168,7 +168,7 @@ export default async function PostPage({
             </div>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-bold leading-tight text-fg-default">
+          <h1 className="font-display text-4xl sm:text-5xl font-bold leading-tight text-fg-default">
             {post.title}
           </h1>
         </header>

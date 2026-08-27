@@ -47,13 +47,13 @@ export default function ResumePage() {
             <Image
               src="/khj.jpg"
               alt="김형준 증명사진"
-              width={64}
-              height={64}
+              width={72}
+              height={96}
               priority
-              className="h-16 w-16 shrink-0 rounded-full border border-border-default object-cover"
+              className="aspect-[3/4] w-16 shrink-0 rounded-lg border border-border-default object-cover"
             />
             <div>
-              <h1 className="text-2xl font-bold text-fg-default">
+              <h1 className="font-display text-2xl font-bold text-fg-default">
                 김형준
                 <span className="ml-2 text-base font-normal text-fg-muted">Hyeongjun Kim (1990.05.01)</span>
               </h1>
