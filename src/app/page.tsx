@@ -7,7 +7,8 @@ import { auth } from "@/lib/auth";
 import { CATEGORIES, categoryLabel, isValidCategory, type CategoryKey } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import { getCommentCounts } from "@/lib/github-discussions";
-import { GITHUB_URL, EMAIL } from "@/lib/site";
+import CopyEmailButton from "@/components/copy-email-button";
+import { GITHUB_URL } from "@/lib/site";
 import PostCard from "@/components/post-card";
 import Pagination from "@/components/pagination";
 import ContentSearch from "@/components/content-search";
@@ -111,16 +112,10 @@ export default async function Home({
                 </svg>
                 {GITHUB_URL.replace(/^https?:\/\//, "")}
               </a>
-              <a
-                href={`mailto:${EMAIL}`}
-                className="inline-flex items-center gap-1.5 font-mono text-xs text-fg-muted transition-colors hover:text-accent-fg"
-              >
-                {/* Octicon: mail */}
-                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" className="shrink-0">
-                  <path d="M1.75 2A1.75 1.75 0 0 0 0 3.75v8.5C0 13.216.784 14 1.75 14h12.5A1.75 1.75 0 0 0 16 12.25v-8.5A1.75 1.75 0 0 0 14.25 2Zm12.5 1.5a.25.25 0 0 1 .25.25v.852l-6 3.96-6-3.96V3.75a.25.25 0 0 1 .25-.25ZM1.5 5.81v6.44c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V5.81l-5.815 3.84a.75.75 0 0 1-.87 0Z" />
-                </svg>
-                {EMAIL}
-              </a>
+              <CopyEmailButton
+                className="inline-flex cursor-pointer items-center gap-1.5 font-mono text-xs text-fg-muted transition-colors hover:text-accent-fg"
+                iconSize={14}
+              />
             </div>
           </section>
         )}
