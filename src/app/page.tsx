@@ -245,18 +245,58 @@ async function PostList({
   if (isSearching) tagLinkExtraParams.q = query;
   if (activeCategory) tagLinkExtraParams.category = activeCategory;
 
-  const activeFilterLabels: string[] = [];
-  if (isSearching) activeFilterLabels.push(`‘${query}’ 검색`);
-  if (activeTag) activeFilterLabels.push(`태그 ‘${activeTag}’`);
-  if (activeCategory) activeFilterLabels.push(categoryLabel(activeCategory));
-  const isFiltering = activeFilterLabels.length > 0;
+  // 각 칩의 × 는 그 필터만 뺀 URL 로 이동한다. 검색어는 검색바, 카테고리는 탭으로
+  // 해제할 수 있었지만 태그는 해제 경로가 없었다.
+  function hrefWithout(key: "q" | "tag" | "category"): string {
+    const params = new URLSearchParams();
+    if (isSearching && key !== "q") params.set("q", query);
+    if (activeTag && key !== "tag") params.set("tag", activeTag);
+    if (activeCategory && key !== "category")
+      params.set("category", activeCategory);
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  }
+
+  // 태그는 목록의 뱃지와 같은 모습(#이름 + 액센트)으로 둔다.
+  const activeFilters: {
+    key: "q" | "tag" | "category";
+    label: string;
+    labelClass: string;
+  }[] = [];
+  if (isSearching)
+    activeFilters.push({ key: "q", label: `‘${query}’`, labelClass: "text-fg-default" });
+  if (activeTag)
+    activeFilters.push({ key: "tag", label: `#${activeTag}`, labelClass: "text-accent-fg" });
+  if (activeCategory)
+    activeFilters.push({
+      key: "category",
+      label: categoryLabel(activeCategory),
+      labelClass: "text-fg-default",
+    });
+  const isFiltering = activeFilters.length > 0;
 
   return (
     <>
       {isFiltering && (
-        <p className="text-sm text-fg-muted">
-          {activeFilterLabels.join(" · ")} 결과 {totalCount}건
-        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+          {activeFilters.map((filter) => (
+            <span key={filter.key} className="inline-flex items-center gap-1">
+              <span className={filter.labelClass}>{filter.label}</span>
+              <Link
+                href={hrefWithout(filter.key)}
+                aria-label={`${filter.label} 필터 해제`}
+                title="필터 해제"
+                className="inline-flex h-4 w-4 items-center justify-center text-fg-muted hover:text-fg-default transition-colors"
+              >
+                {/* Octicon: x */}
+                <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true">
+                  <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" />
+                </svg>
+              </Link>
+            </span>
+          ))}
+          <span className="text-fg-muted">결과 {totalCount}건</span>
+        </div>
       )}
 
       {pagePosts.length === 0 ? (
