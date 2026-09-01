@@ -32,7 +32,7 @@ export async function createDigestPost(post: DigestPost): Promise<CreateDigestRe
   // postInputSchema 의 입력 타입을 그대로 만족시켜서, 이후 스키마에 필수 필드가
   // 추가되면(이번 series/tags 처럼) 여기서 컴파일 에러로 바로 드러나게 한다.
   const parsed = postInputSchema.parse({
-    title: `이번 주 개발자 뉴스 - ${post.subtitle}`,
+    title: `이번 주 AI 테크뉴스 - ${post.subtitle}`,
     slug,
     content: post.content,
     category: "dev",

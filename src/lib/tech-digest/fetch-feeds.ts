@@ -13,12 +13,38 @@ type FeedConfig = {
   url: string;
 };
 
-const FEEDS: FeedConfig[] = [
-  { name: "카카오 기술블로그", url: "https://tech.kakao.com/feed" },
-  { name: "GeekNews", url: "https://news.hada.io/rss/news" },
-  { name: "GitHub Blog", url: "https://github.blog/feed/" },
-  { name: "dev.to", url: "https://dev.to/feed" },
+// AI 랩 공식 블로그. Anthropic 은 공식 RSS 를 제공하지 않아 제외했다.
+const AI_LAB_FEEDS: FeedConfig[] = [
+  { name: "OpenAI", url: "https://openai.com/news/rss.xml" },
+  { name: "Google DeepMind", url: "https://deepmind.google/blog/rss.xml" },
+  { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml" },
 ];
+
+// AI 연구/엔지니어링 인물 블로그·뉴스레터.
+const PEOPLE_FEEDS: FeedConfig[] = [
+  { name: "Andrej Karpathy", url: "https://karpathy.github.io/feed.xml" },
+  { name: "Simon Willison", url: "https://simonwillison.net/atom/everything/" },
+  { name: "Latent Space (swyx)", url: "https://www.latent.space/feed" },
+  { name: "Jeremy Howard (fast.ai)", url: "https://www.fast.ai/index.xml" },
+  { name: "Nathan Lambert (Interconnects)", url: "https://interconnects.ai/feed" },
+  { name: "Sebastian Raschka", url: "https://sebastianraschka.com/rss_feed.xml" },
+  { name: "Eugene Yan", url: "https://eugeneyan.com/rss/" },
+  { name: "Hamel Husain", url: "https://hamel.dev/index.xml" },
+  { name: "Lilian Weng", url: "https://lilianweng.github.io/index.xml" },
+  { name: "Chip Huyen", url: "https://huyenchip.com/feed.xml" },
+];
+
+// 오픈소스 프레임워크/개발도구 인플루언서.
+const TOOLING_FEEDS: FeedConfig[] = [
+  { name: "Dan Abramov", url: "https://overreacted.io/rss.xml" },
+  { name: "Kent C. Dodds", url: "https://kentcdodds.com/blog/rss.xml" },
+  { name: "Addy Osmani", url: "https://addyosmani.com/feed.xml" },
+  { name: "Anthony Fu", url: "https://antfu.me/feed.xml" },
+  { name: "Svelte 블로그", url: "https://svelte.dev/blog/rss.xml" },
+  { name: "Vercel 블로그", url: "https://vercel.com/atom" },
+];
+
+const FEEDS: FeedConfig[] = [...AI_LAB_FEEDS, ...PEOPLE_FEEDS, ...TOOLING_FEEDS];
 
 const ITEMS_PER_SOURCE = 5;
 const LOOKBACK_DAYS = 7;
