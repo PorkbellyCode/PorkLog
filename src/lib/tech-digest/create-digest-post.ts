@@ -43,8 +43,15 @@ export async function createDigestPost(post: DigestPost): Promise<CreateDigestRe
 
   await db.insert(posts).values(parsed);
 
-  revalidatePath("/");
-  revalidatePath(`/posts/${slug}`);
+  // revalidatePath 는 실행 중인 Next.js 요청 컨텍스트 안에서만 동작한다.
+  // scripts/run-tech-digest.mjs 처럼 독립 스크립트로 실행할 때는 그 컨텍스트가 없어 던지므로,
+  // 그런 경우엔 무시하고 넘어간다(배포 환경에서 Vercel Cron 이 호출할 때는 정상 동작).
+  try {
+    revalidatePath("/");
+    revalidatePath(`/posts/${slug}`);
+  } catch (err) {
+    console.warn("revalidatePath 스킵(요청 컨텍스트 밖에서 실행됨):", err);
+  }
 
   return { status: "created", slug };
 }
