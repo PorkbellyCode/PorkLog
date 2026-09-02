@@ -11,6 +11,7 @@ import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import { extractPreview } from "@/lib/post-preview";
 import { extractToc } from "@/lib/toc";
 import TableOfContents from "@/components/table-of-contents";
+import TocRail from "@/components/toc-rail";
 import TagBadges from "@/components/tag-badges";
 import PostNav from "@/components/post-nav";
 import SeriesNav from "@/components/series-nav";
@@ -182,6 +183,7 @@ export default async function PostPage({
         )}
 
         <TableOfContents items={toc} />
+        <TocRail items={toc} />
 
         <article className="prose max-w-none">
           <div dangerouslySetInnerHTML={{ __html: html }} />

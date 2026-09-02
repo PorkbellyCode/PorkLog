@@ -6,7 +6,7 @@ export default function TableOfContents({ items }: { items: TocItem[] }) {
   return (
     <details
       open
-      className="mb-8 rounded-lg border border-border-default bg-bg-subtle px-4 py-3"
+      className="mb-8 rounded-lg border border-border-default bg-bg-subtle px-4 py-3 xl:hidden"
     >
       <summary className="cursor-pointer list-none text-sm font-semibold text-fg-default marker:content-none">
         <span className="inline-flex items-center gap-1.5">
