@@ -20,6 +20,9 @@ const extraIcons: Record<string, string> = {
   "OpenAI API": "openai",
   ".NET Framework": "dotnet",
   Blazor: "blazor",
+  Turso: "turso",
+  "Fly.io": "flydotio",
+  MCP: "modelcontextprotocol",
 };
 
 // 기술명으로 아이콘 파일명을 찾는다. 없으면 undefined.
