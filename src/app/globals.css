@@ -198,11 +198,6 @@ kbd {
     --accent-brand: #be4c22;
   }
 
-  /* Radix Accordion 이 forceMount 로 남겨둔 닫힌 항목까지 모두 펼쳐 인쇄한다. */
-  [data-state="closed"][hidden] {
-    display: block !important;
-  }
-
   /* 항목이 페이지 경계에서 잘리지 않게 한다. */
   section,
   li {
