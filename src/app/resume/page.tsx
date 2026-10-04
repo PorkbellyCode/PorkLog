@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { projects, sideProjects } from "@/lib/projects";
 import ProjectAccordion from "@/components/project-accordion";
 import PrintButton from "@/components/print-button";
@@ -105,7 +106,39 @@ export default function ResumePage() {
         {/* 사이드 프로젝트 */}
         <section className="space-y-3">
           <h2 className="text-lg font-bold text-fg-default border-b border-border-default pb-2">사이드 프로젝트</h2>
-          <ProjectAccordion projects={sideProjects} />
+          <ul className="divide-y divide-border-default overflow-hidden rounded-lg border border-border-default">
+            {sideProjects.map((p) => {
+              const live = p.links.find((l) => l.label === "라이브");
+              return (
+                <li key={p.slug} className="space-y-1 bg-bg-default px-4 py-3">
+                  <p className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="text-sm font-semibold text-fg-default">{p.name}</span>
+                    <span className="text-xs text-fg-muted">{p.period}</span>
+                  </p>
+                  <p className="text-sm text-fg-default">{p.tagline}</p>
+                  <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+                    <Link href={`/portfolio#${p.slug}`} className="text-accent-fg hover:underline print:hidden">
+                      자세히 보기
+                    </Link>
+                    {/* 인쇄물에서는 링크 href 가 보이지 않으므로 주소를 텍스트로 남긴다. */}
+                    <span className="hidden text-fg-muted print:inline">
+                      porklog.dev/portfolio#{p.slug}
+                    </span>
+                    {live && (
+                      <a
+                        href={live.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-fg-muted hover:text-accent-fg hover:underline"
+                      >
+                        {live.url.replace(/^https?:\/\//, "")}
+                      </a>
+                    )}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
         </section>
 
         {/* 경력 */}

@@ -10,10 +10,10 @@ export default async function Header() {
 
   return (
     <header className="sticky top-0 z-40 h-14 bg-[#1f2328] text-white print:hidden">
-      <div className="flex h-full items-center justify-between gap-4 px-6">
+      <div className="flex h-full items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-display text-2xl font-semibold tracking-tight hover:opacity-80 transition-opacity"
+          className="inline-flex items-center gap-1.5 font-display text-xl font-semibold sm:text-2xl tracking-tight hover:opacity-80 transition-opacity"
         >
           {/* Twemoji 🥓 (CC-BY 4.0) */}
           <svg viewBox="0 0 36 36" width={26} height={26} aria-hidden="true" className="shrink-0">
@@ -30,7 +30,13 @@ export default async function Header() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <Link
+            href="/portfolio"
+            className="text-sm text-white/80 hover:text-white transition-colors"
+          >
+            Portfolio
+          </Link>
           <Link
             href="/resume"
             className="text-sm text-white/80 hover:text-white transition-colors"
@@ -41,9 +47,21 @@ export default async function Header() {
             <>
               <Link
                 href="/admin/stats"
-                className="text-sm text-white/80 hover:text-white transition-colors"
+                aria-label="통계"
+                title="통계"
+                className="hidden text-sm text-white/80 hover:text-white transition-colors sm:inline"
               >
                 통계
+              </Link>
+              <Link
+                href="/admin/stats"
+                aria-label="통계"
+                title="통계"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-white/80 hover:bg-white/10 hover:text-white transition-colors sm:hidden"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+                  <path d="M1.5 1.75V13.5h13.25a.75.75 0 0 1 0 1.5H.75a.75.75 0 0 1-.75-.75V1.75a.75.75 0 0 1 1.5 0Zm14.28 2.53-5.25 5.25a.75.75 0 0 1-1.06 0L7 7.06 4.28 9.78a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042l3.25-3.25a.75.75 0 0 1 1.06 0L10 7.94l4.72-4.72a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042Z" />
+                </svg>
               </Link>
               <LogoutButton />
             </>
