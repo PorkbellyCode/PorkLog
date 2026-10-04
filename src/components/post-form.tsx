@@ -12,7 +12,6 @@ import {
 } from "@/lib/post-actions";
 import { MAX_TAGS, MAX_TAG_LENGTH } from "@/lib/post-schema";
 import MarkdownEditor from "@/components/markdown-editor";
-import { Badge } from "@/components/ui/badge";
 import { CATEGORIES } from "@/lib/categories";
 
 type PostFormProps = {
