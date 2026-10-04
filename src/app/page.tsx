@@ -75,7 +75,7 @@ export default async function Home({
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-8">
-        {/* Resume 진입 히어로: 기본 랜딩(검색·카테고리·태그·페이지네이션 아님)에서만 노출 */}
+        {/* Portfolio·Resume 진입 히어로: 기본 랜딩(검색·카테고리·태그·페이지네이션 아님)에서만 노출 */}
         {!isSearching && !activeTag && !activeCategory && currentPage === 1 && (
           <section>
             <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-fg-default sm:text-3xl">
@@ -86,10 +86,20 @@ export default async function Home({
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-fg-muted">
               프론트엔드를 중심으로, 화면 너머의 동작까지 책임지는 풀스택 개발자입니다.
             </p>
-            {/* Resume·GitHub·이메일을 같은 형식의 텍스트 링크로 한 줄에 둔다.
-              * Resume 만 액센트 + semibold 로 두어 주 액션임을 드러낸다.
+            {/* Portfolio·Resume·GitHub·이메일을 같은 형식의 텍스트 링크로 한 줄에 둔다.
+              * Portfolio·Resume 만 액센트 + semibold 로 두어 주 액션임을 드러낸다(헤더 순서와 같다).
               * 이미 오렌지라 hover 는 색이 아니라 밑줄로 준다. */}
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+              <Link
+                href="/portfolio"
+                className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-fg transition-all hover:underline hover:underline-offset-4"
+              >
+                {/* Octicon: browser */}
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" className="shrink-0">
+                  <path d="M0 2.75C0 1.784.784 1 1.75 1h12.5c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 14.25 15H1.75A1.75 1.75 0 0 1 0 13.25Zm1.75-.25a.25.25 0 0 0-.25.25V4h13V2.75a.25.25 0 0 0-.25-.25ZM14.5 5.5h-13v7.75c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25Z" />
+                </svg>
+                Portfolio
+              </Link>
               <Link
                 href="/resume"
                 className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-fg transition-all hover:underline hover:underline-offset-4"
