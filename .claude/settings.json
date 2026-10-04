@@ -15,5 +15,8 @@
       "Bash(pnpm db:push:*)",
       "Read(./.env*)"
     ]
+  },
+  "enabledPlugins": {
+    "frontend-design@anthropic-plugin-directory": true
   }
 }
