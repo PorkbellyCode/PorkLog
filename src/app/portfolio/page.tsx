@@ -141,17 +141,6 @@ function ProjectSection({ p }: { p: SideProject }) {
           </p>
         )}
 
-        <dl className="grid max-w-3xl gap-x-8 gap-y-3 text-sm leading-relaxed sm:grid-cols-2">
-          <div>
-            <dt className="font-semibold text-fg-default">지금 되는 것</dt>
-            <dd className="mt-1 text-fg-muted">{p.works}</dd>
-          </div>
-          <div>
-            <dt className="font-semibold text-fg-default">아직 안 되는 것</dt>
-            <dd className="mt-1 text-fg-muted">{p.gaps}</dd>
-          </div>
-        </dl>
-
         <div className="flex flex-wrap gap-5">
           {p.links.map((link) => (
             <a

@@ -34,8 +34,6 @@ export type SideProject = Project & {
   tagline: string; // 카드·Resume 용 한 문장
   keyTech: string[]; // 개요에 보여줄 핵심 기술 4~5개
   decisions: Decision[];
-  works: string; // 지금 되는 것
-  gaps: string; // 아직 안 되는 것·제약
   asOf: string; // 스크린샷·설명 기준 시점
   access?: string; // 바로 써볼 수 없을 때의 안내
 };
@@ -191,8 +189,6 @@ export const sideProjects: SideProject[] = [
           "서버가 발행 시각이 지난 글의 변경 값을 무시하고 기존 값을 유지합니다. 폼에서도 입력을 비활성화하고 이유를 안내해, 바뀌지 않는 값을 바꾼 것처럼 보이지 않게 했습니다. 이 규칙은 Vitest 테스트로 고정했습니다.",
       },
     ],
-    works: "글 작성·예약 발행, 시리즈·태그·검색, 방문자 통계, 주간 AI 뉴스 자동 발행이 운영 중입니다.",
-    gaps: "글은 관리자만 쓸 수 있고, 댓글은 GitHub 계정(Giscus)으로만 남길 수 있습니다.",
     asOf: "2026.10 기준",
     images: [
       {
@@ -286,8 +282,6 @@ export const sideProjects: SideProject[] = [
           "요약을 저장할 때 해당 날짜의 마지막 버전 + 1로 새 행을 만들고, 조회는 버전 순으로 합니다.",
       },
     ],
-    works: "음성 녹음과 전사, 하루 요약과 버전 비교, PWA 설치, 관리자 승인·사용중지가 동작합니다.",
-    gaps: "관리자 승인을 받아야 쓸 수 있고, 녹음 한 건은 전사 API 상한인 25MB까지입니다.",
     asOf: "2026.10 기준",
     access: "관리자 승인제라 바로 사용은 어렵습니다. 화면은 아래 스크린샷으로 확인하세요.",
     images: [
@@ -384,8 +378,6 @@ export const sideProjects: SideProject[] = [
           "문항 진행을 first → hint → explanation → unresolved 상태 머신(순수 함수)으로 떼어 채점(LLM)·저장(DB)과 분리했습니다. 단계마다 한 번만 답할 수 있고, 배점은 첫 시도 1.0 · 힌트 후 0.6 · 설명 후 0.3 · 못 풂 0입니다.",
       },
     ],
-    works: "레포 분석, 개념별 부채비율 지도, 퀴즈와 점수 반영, 여러 LLM 제공자 선택이 동작합니다.",
-    gaps: "새 레포 분석은 GitHub 로그인이 필요하고 퀴즈에는 본인의 LLM API 키가 필요합니다. MCP 서버 버전은 웹이 안정된 뒤 완성할 예정입니다.",
     asOf: "2026.10 기준",
     images: [
       {
