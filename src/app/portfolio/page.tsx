@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { sideProjects, type Decision, type SideProject } from "@/lib/projects";
 import ProjectGallery from "@/components/project-gallery";
 import SkillBadge from "@/components/skill-badge";
+import TocRail from "@/components/toc-rail";
+import type { TocItem } from "@/lib/toc";
+
+// 오른쪽 목차 레일: 프로젝트 섹션(id=slug)만 나열한다.
+const TOC: TocItem[] = sideProjects.map((p) => ({ depth: 2, text: p.name, id: p.slug }));
 
 const DESCRIPTION =
   "사이드 프로젝트 PorkLog, WorkWrap, CRDD의 핵심 기능과 기술 결정.";
@@ -187,6 +192,7 @@ export default function PortfolioPage() {
           ))}
         </div>
       </div>
+      <TocRail items={TOC} />
     </main>
   );
 }
