@@ -1,6 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import Link from "next/link";
 import { sideProjects, type Decision, type SideProject } from "@/lib/projects";
 import ProjectGallery from "@/components/project-gallery";
 import SkillBadge from "@/components/skill-badge";
@@ -34,54 +32,32 @@ function Status({ status }: { status: SideProject["status"] }) {
   );
 }
 
-// 개요: 카드 격자 대신 목차처럼 한 줄씩 훑는 목록. 줄 전체가 아래 섹션 앵커다.
+// 개요: 목차처럼 한 줄씩 훑는 목록. 줄 전체가 아래 섹션 앵커다.
 function Overview() {
   return (
     <nav aria-label="프로젝트 개요">
       <ul className="divide-y divide-border-default border-y border-border-default">
-        {sideProjects.map((p, i) => {
-          const cover = p.images[0];
-          return (
-            <li key={p.slug}>
-              <a
-                href={`#${p.slug}`}
-                className="group grid grid-cols-[6.5rem_1fr] items-center gap-4 py-5 transition-colors hover:bg-bg-subtle sm:grid-cols-[13rem_1fr] sm:gap-6 sm:px-2"
-              >
-                <div className="aspect-[16/10] overflow-hidden rounded-md border border-border-default bg-[#1f2328] dark:border-white/20">
-                  {cover ? (
-                    <Image
-                      src={cover.src}
-                      alt=""
-                      width={cover.width}
-                      height={cover.height}
-                      sizes="(min-width: 640px) 208px, 104px"
-                      preload={i === 0}
-                      className={`h-full w-full object-cover ${cover.height > cover.width ? "object-[50%_25%]" : "object-top"}`}
-                    />
-                  ) : (
-                    <span className="flex h-full items-center justify-center px-2 text-center text-xs text-white/60">
-                      스크린샷 준비 중
-                    </span>
-                  )}
-                </div>
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-display text-2xl font-bold tracking-tight text-fg-default transition-colors group-hover:text-accent-fg sm:text-3xl">
-                      {p.name}
-                    </span>
-                    <Status status={p.status} />
-                  </div>
-                  <p className="text-sm leading-relaxed text-fg-default">{p.tagline}</p>
-                  <ul className="flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-xs text-fg-muted">
-                    {p.keyTech.map((t) => (
-                      <li key={t}>{t}</li>
-                    ))}
-                  </ul>
-                </div>
-              </a>
-            </li>
-          );
-        })}
+        {sideProjects.map((p) => (
+          <li key={p.slug}>
+            <a
+              href={`#${p.slug}`}
+              className="group block space-y-1 py-3.5 transition-colors hover:bg-bg-subtle sm:px-2"
+            >
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className="font-display text-xl font-bold tracking-tight text-fg-default transition-colors group-hover:text-accent-fg">
+                  {p.name}
+                </span>
+                <Status status={p.status} />
+              </div>
+              <p className="text-sm leading-relaxed text-fg-default">{p.tagline}</p>
+              <ul className="flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-xs text-fg-muted">
+                {p.keyTech.map((t) => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </a>
+          </li>
+        ))}
       </ul>
     </nav>
   );
@@ -99,7 +75,7 @@ function DecisionItem({ decision }: { decision: Decision }) {
       <h4 className="font-display text-lg font-semibold leading-snug text-fg-default">{decision.title}</h4>
       <dl className="space-y-3 text-sm leading-relaxed">
         {rows.map((r) => (
-          <div key={r.label} className="grid grid-cols-[2.25rem_1fr] gap-3">
+          <div key={r.label} className="grid grid-cols-[3rem_1fr] gap-3">
             <dt className={`pt-px font-mono text-xs ${r.strong ? "font-semibold text-accent-fg" : "text-fg-muted"}`}>
               {r.label}
             </dt>
@@ -119,29 +95,32 @@ function ExternalIcon() {
   );
 }
 
+function SectionLabel({ children }: { children: string }) {
+  return <h3 className="text-sm font-semibold text-fg-muted">{children}</h3>;
+}
+
 function ProjectSection({ p }: { p: SideProject }) {
   return (
-    <section id={p.slug} aria-labelledby={`${p.slug}-title`} className="scroll-mt-20 space-y-8 border-t border-border-default pt-10">
-      <header className="space-y-4">
+    <section id={p.slug} aria-labelledby={`${p.slug}-title`} className="scroll-mt-20 space-y-10 py-14 first:pt-0 last:pb-0">
+      <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <h2 id={`${p.slug}-title`} className="font-display text-4xl font-bold tracking-tight text-fg-default sm:text-5xl">
+          <h2 id={`${p.slug}-title`} className="font-display text-3xl font-bold tracking-tight text-fg-default sm:text-4xl">
             {p.name}
           </h2>
           <Status status={p.status} />
         </div>
-        <p className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-fg-muted">
-          <span>{p.period}</span>
-          <span>{p.role}</span>
+        <p className="font-mono text-xs text-fg-muted">
+          {p.period} · {p.asOf}
         </p>
-        <p className="max-w-2xl text-base leading-relaxed text-fg-default">{p.tagline}</p>
+        <p className="max-w-2xl text-lg leading-relaxed text-fg-default">{p.tagline}</p>
 
         {p.access && (
-          <p className="max-w-2xl border-l-4 border-accent-brand bg-bg-subtle px-4 py-3 text-sm leading-relaxed text-fg-default">
+          <p className="max-w-2xl border-l-2 border-border-default pl-4 text-sm leading-relaxed text-fg-muted">
             {p.access}
           </p>
         )}
 
-        <div className="flex flex-wrap gap-5">
+        <div className="flex flex-wrap gap-5 pt-1">
           {p.links.map((link) => (
             <a
               key={link.url}
@@ -158,22 +137,31 @@ function ProjectSection({ p }: { p: SideProject }) {
       </header>
 
       <div className="space-y-3">
-        <ProjectGallery images={p.images} />
-        <p className="font-mono text-xs text-fg-muted">{p.asOf}</p>
+        <SectionLabel>주요 기능</SectionLabel>
+        <ul className="max-w-3xl list-disc space-y-2 pl-5 text-sm leading-relaxed text-fg-default marker:text-fg-muted">
+          {p.tasks.map((t) => (
+            <li key={t}>{t}</li>
+          ))}
+        </ul>
       </div>
 
-      <div>
-        <h3 className="text-lg font-bold text-fg-default">기술 결정</h3>
-        <div className="mt-1 divide-y divide-border-default">
+      <div className="space-y-1">
+        <SectionLabel>기술 결정</SectionLabel>
+        <div className="divide-y divide-border-default">
           {p.decisions.map((d) => (
             <DecisionItem key={d.title} decision={d} />
           ))}
         </div>
       </div>
 
-      <div>
-        <p className="mb-2 text-xs text-fg-muted">사용 기술 전체</p>
-        <div className="flex flex-wrap gap-1.5 opacity-75 [&>span]:px-2 [&>span]:py-0.5 [&>span]:text-xs">
+      <div className="space-y-3">
+        <SectionLabel>화면</SectionLabel>
+        <ProjectGallery images={p.images} />
+      </div>
+
+      <div className="space-y-3">
+        <SectionLabel>사용 기술</SectionLabel>
+        <div className="flex flex-wrap gap-1.5">
           {p.tech.map((t) => (
             <SkillBadge key={t} name={t} />
           ))}
@@ -186,24 +174,14 @@ function ProjectSection({ p }: { p: SideProject }) {
 export default function PortfolioPage() {
   return (
     <main className="px-4 py-8 sm:py-12">
-      <div className="mx-auto w-full max-w-5xl space-y-14">
-        <section className="space-y-4">
-          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-5xl">
-            Portfolio
-          </h1>
-          <p className="max-w-xl text-sm leading-relaxed text-fg-muted">
-            사이드 프로젝트 3개의 핵심 기능과 기술 결정을 정리했습니다. 모두 Next.js·TypeScript 풀스택이고 LLM
-            API를 연동했습니다. 회사 프로젝트는 고객사 시스템이라 화면을 공개할 수 없어, 역할과 성과를{" "}
-            <Link href="/resume" className="text-accent-fg underline underline-offset-4">
-              Resume
-            </Link>
-            에 정리했습니다.
-          </p>
-        </section>
+      <div className="mx-auto w-full max-w-5xl space-y-10">
+        <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-4xl">
+          Portfolio
+        </h1>
 
         <Overview />
 
-        <div className="space-y-16">
+        <div className="divide-y divide-border-default">
           {sideProjects.map((p) => (
             <ProjectSection key={p.slug} p={p} />
           ))}

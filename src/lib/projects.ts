@@ -238,7 +238,7 @@ export const sideProjects: SideProject[] = [
     name: "WorkWrap",
     period: "2026.08.09 ~ 현재",
     org: "개인 프로젝트",
-    status: { label: "개발 중 · 베타", state: "dev" },
+    status: { label: "베타", state: "dev" },
     tagline: "음성으로 남긴 작업 메모를 전사해 쌓고, 하루치를 LLM으로 요약해 주는 서비스.",
     summary: "음성으로 남긴 작업 메모를 자동 전사해 쌓아두고, LLM으로 하루치를 요약해주는 개인 생산성 서비스 (개발 중)",
     role: "개인 프로젝트",
@@ -283,7 +283,7 @@ export const sideProjects: SideProject[] = [
       },
     ],
     asOf: "2026.10 기준",
-    access: "관리자 승인제라 바로 사용은 어렵습니다. 화면은 아래 스크린샷으로 확인하세요.",
+    access: "관리자 승인제라 바로 사용은 어렵습니다. 화면은 아래 스크린샷으로 확인할 수 있습니다.",
     images: [
       {
         src: "/portfolio/workwrap/dashboard.png",
@@ -328,7 +328,7 @@ export const sideProjects: SideProject[] = [
     name: "CRDD",
     period: "2026.09.02 ~ 현재",
     org: "개인 프로젝트",
-    status: { label: "개발 중 · 베타", state: "dev" },
+    status: { label: "베타", state: "dev" },
     tagline: "AI가 짠 코드를 내가 얼마나 설명할 수 있는지, 프로젝트 구조 위에 부채비율로 보여주는 서비스.",
     summary:
       "AI가 만든 코드를 개발자가 얼마나 이해하고 있는지 프로젝트 구조 위에 인지부채 비율로 보여주고, 코드 기반 퀴즈로 줄여나가는 서비스 (개발 중, 초기 MCP 서버 버전은 웹 안정화 후 완성 예정)",
@@ -354,6 +354,7 @@ export const sideProjects: SideProject[] = [
       "MCP",
     ],
     keyTech: ["Next.js", "TypeScript", "Turso", "Docker", "Fly.io"],
+    access: "새 레포 분석은 GitHub 로그인, 퀴즈는 본인의 LLM API 키가 필요합니다. 화면은 아래 스크린샷으로 확인할 수 있습니다.",
     decisions: [
       {
         title: "구조 지도는 LLM 없이 만들기",

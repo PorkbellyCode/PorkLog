@@ -10,16 +10,11 @@ function Caption({ children }: { children?: string }) {
   return <figcaption className="mt-2.5 text-sm leading-relaxed text-fg-muted">{children}</figcaption>;
 }
 
-// 데스크톱 화면: 사이트 헤더와 같은 #1f2328 막대를 얹은 브라우저 프레임.
+// 데스크톱 화면: 어두운 프레임에 담는다.
 function BrowserShot({ image, sizes }: { image: ProjectImage; sizes: string }) {
   return (
     <figure>
       <div className={`${FRAME} rounded-lg`}>
-        <div className="flex h-6 items-center gap-1.5 px-3" aria-hidden="true">
-          <span className="h-2 w-2 rounded-full bg-white/25" />
-          <span className="h-2 w-2 rounded-full bg-white/25" />
-          <span className="h-2 w-2 rounded-full bg-white/25" />
-        </div>
         <Image
           src={image.src}
           alt={image.alt}
