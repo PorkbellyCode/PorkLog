@@ -102,12 +102,14 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 | backend | `backend` | Sonnet | Server Actions·API 라우트·DB·인증·마크다운 파이프라인·Tech Digest |
 | critic | `critic` | Opus | 설계와 코드의 허점 찾기, 린트·타입체크·테스트 실행 (코드 수정 안 함) |
 | reader | `reader` | Sonnet | 블로그 독자·채용 담당자 관점에서 화면 문구·Resume·UX 평가 (코드 수정 안 함) |
+| designer | `designer` | Sonnet | 화면 정보 위계·타이포·여백·일관성, README 등 문서 구성 진단과 개선안 (코드 수정 안 함) |
 
 ### 작업 유형별 조합 — 매번 전원을 띄우지 않는다
 
 - **기능 설계 논의**: 리드 + critic + reader
 - **구현**: 리드 + frontend 및/또는 backend(필요한 쪽만) + critic
 - **UX·문구·Resume 점검**: 리드 + reader
+- **디자인·문서 개선**: 리드 + designer(+ reader) 진단 → frontend 구현 → critic 검증
 - **버그 조사**: 리드 + backend/frontend + critic (가설을 서로 반박하게 한다)
 
 ### 진행 순서

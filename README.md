@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/PorkbellyCode/PorkLog/actions/workflows/ci.yml/badge.svg)](https://github.com/PorkbellyCode/PorkLog/actions/workflows/ci.yml)
 
-Next.js 16과 Neon Postgres로 만든 DB 기반 기술 블로그 겸 포트폴리오입니다. 예약 발행·시리즈 연재, 방문자 통계 대시보드, 매주 자동 발행되는 AI Tech 뉴스까지 혼자 설계·구현·배포·운영하고 있습니다.
+Next.js 16과 Neon Postgres로 만든 DB 기반 기술 블로그 겸 포트폴리오입니다. 예약 발행·시리즈 연재, 방문자 통계 대시보드, 매주 자동 발행되는 AI Tech 뉴스를 갖추고 있습니다.
 
 🔗 **라이브** → https://porklog.dev · [Portfolio](https://porklog.dev/portfolio) · [Resume](https://porklog.dev/resume)
 
@@ -21,7 +21,7 @@ Next.js 16과 Neon Postgres로 만든 DB 기반 기술 블로그 겸 포트폴�
 
 ### 포트폴리오
 - **Resume** (`/resume`) — 경력·회사 프로젝트·기술 스택, 인쇄 전용 스타일로 PDF 저장
-- **Portfolio** (`/portfolio`) — 사이드 프로젝트별 라이브 서비스 스크린샷과 "문제 → 선택 → 결과" 기술 결정
+- **Portfolio** (`/portfolio`) — 사이드 프로젝트별 주요 기능, "문제 → 선택 → 결과" 기술 결정, 화면 스크린샷, 사용 기술. 데스크톱에서는 프로젝트 목차 레일로 이동
 
 ### AI 주간 Tech 뉴스
 - Vercel Cron이 매주 RSS·GitHub 급상승 레포·Hugging Face·OpenRouter 네 곳에서 소식을 수집
@@ -97,7 +97,7 @@ pnpm test                   # .env.test 의 테스트 전용 DB 사용 (테스�
 
 ## AI와 함께 개발하기
 
-Claude Code를 멀티 에이전트로 구성해 개발합니다. 메인 세션이 설계를 맡고, frontend·backend가 구현하고, critic이 리뷰와 검증을, reader가 독자 관점의 문구 점검을 맡습니다. 역할 정의는 `.claude/agents/`, 작업 규칙은 [`CLAUDE.md`](./CLAUDE.md)에 있습니다.
+Claude Code를 멀티 에이전트로 구성해 개발합니다. 메인 세션이 설계를 맡고, frontend·backend가 구현하고, critic이 리뷰와 검증을, reader가 독자·채용 담당자 관점의 문구 점검을, designer가 화면과 문서의 디자인 진단을 맡습니다. 역할 정의는 `.claude/agents/`, 작업 규칙은 [`CLAUDE.md`](./CLAUDE.md)에 있습니다.
 
 ---
 
