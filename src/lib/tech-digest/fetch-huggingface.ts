@@ -1,5 +1,6 @@
 // Hugging Face 공식 모델 목록 API. sort=trending 값은 API가 거부하므로(확인함),
 // 기본 응답에 포함된 trendingScore 필드를 기준으로 직접 정렬한다.
+import { fetchWithTimeout } from "./http";
 
 export type TrendingModel = {
   id: string;
@@ -21,7 +22,7 @@ type HfModel = {
 };
 
 export async function fetchTrendingModels(): Promise<TrendingModel[]> {
-  const res = await fetch(`https://huggingface.co/api/models?limit=${FETCH_SIZE}`);
+  const res = await fetchWithTimeout(`https://huggingface.co/api/models?limit=${FETCH_SIZE}`);
   if (!res.ok) {
     throw new Error(`Hugging Face API 요청 실패: HTTP ${res.status}`);
   }

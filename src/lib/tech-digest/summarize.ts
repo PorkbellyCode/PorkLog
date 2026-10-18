@@ -1,135 +1,110 @@
-import type { DigestItem } from "./fetch-feeds";
-import type { GithubTrending } from "./fetch-github";
-import type { TrendingModel as HfTrendingModel } from "./fetch-huggingface";
-import type { TrendingModel as OpenRouterTrendingModel } from "./fetch-openrouter";
+import { fetchWithTimeout } from "./http";
+import { findBannedPhrases, parseLlmOutput, type ParsedOutput } from "./compose";
+import type { Candidate } from "./types";
 
-const OPENAI_MODEL = "gpt-5.4-mini";
+// 쓰기 모델. 이름이 틀리면 dry-run 에서 OpenAI 가 거부하며 바로 드러난다.
+const OPENAI_MODEL = "gpt-5.4";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
+const OPENAI_TIMEOUT_MS = 100_000;
+// 함수 한도(maxDuration 300초) 안에서 재시도까지 끝내려면, 파이프라인 시작 후 이 시간이 지나면 재시도하지 않는다.
+const RETRY_DEADLINE_MS = 150_000;
 
-export type DigestInput = {
-  items: DigestItem[];
-  github: GithubTrending;
-  hfModels: HfTrendingModel[];
-  openRouterModels: OpenRouterTrendingModel[];
+export type SummaryResult = ParsedOutput & {
+  bannedLeft: string[]; // 재시도 후에도 남은 금지 표현
 };
 
-export type DigestPost = {
-  subtitle: string;
-  content: string; // 마크다운 본문
-};
-
-function formatItems(items: DigestItem[]): string {
-  return items
-    .map(
-      (item, i) =>
-        `${i + 1}. [출처: ${item.source}] ${item.title}\n요약 정보: ${item.description}\n원문 링크: ${item.link}`,
-    )
+function formatCandidates(candidates: Candidate[]): string {
+  return candidates
+    .map((c) => `[id ${c.id}] (${c.kind}, 출처: ${c.source}) ${c.title}\n링크: ${c.link}\n본문: ${c.body || "(본문 없음)"}`)
     .join("\n\n");
 }
 
-function formatGithub(github: GithubTrending): string {
-  const repoLines = github.repos
-    .map((r) => `${r.rank}. ${r.fullName} (⭐${r.stars}, ${r.language ?? "언어 미상"}) - ${r.description}\n링크: ${r.url}`)
-    .join("\n");
+export function buildPrompt(candidates: Candidate[]): string {
+  return `너는 한국어 개발자 블로그의 주간 "개발 뉴스" 코너 에디터다. 독자는 웹/AI 서비스를 만드는 실무 개발자다.
+아래 후보 중 이번 주에 독자가 직접 써 보거나 알아야 할 것만 골라 소개하라.
 
-  const devLines = github.developers
-    .map((d) => {
-      const repos = d.topRepos.map((r) => `  - ${r.name} (⭐${r.stars}): ${r.description}`).join("\n");
-      return `${d.username} (${d.profileUrl})\n소개: ${d.bio ?? "소개 없음"}\n대표 레포:\n${repos}`;
-    })
-    .join("\n\n");
+[선택 기준]
+- 우선: 새 릴리스와 마이그레이션 영향, 코드가 있는 기법, 실측 결과·포스트모템, 한국에서 바로 써 볼 수 있는 것.
+- 제외: 고객 사례, 홍보, 투자, 정책, 행사, 일반 의견, API·가격 정보가 없는 모델 출시 소식, 제품 철학 에세이.
+- 쓸 거리가 부족하면 적게 골라라. 억지로 채우지 마라. 최대 7개.
 
-  return `[급상승 레포 랭킹 (최근 7일 내 생성, 스타 많은 순)]\n${repoLines}\n\n[주목할 개발자 후보 (급상승 레포 소유자 상위 3명)]\n${devLines}`;
+[문체]
+- 평가어 대신 사실만 쓴다. "좋다", "강력하다" 대신 무엇이 어떻게 달라졌는지 쓴다.
+- 합쇼체("~합니다")로 통일한다. 문장은 짧게, 문단은 3문장 이하로 쓴다.
+- 모든 문단에 버전, 수치, 고유명사, 명령어 중 하나 이상을 넣는다.
+- 인사말과 마무리 문장을 쓰지 않는다.
+- 후보 본문에 없는 수치나 주장을 쓰지 않는다. 원문 문단을 옮기지 않는다. 직접 인용은 한 문장 이내로 한다.
+- 인물 블로그 출처는 필자의 주장이므로 "~라고 소개합니다"처럼 출처를 밝히는 어조로 쓴다.
+- 다음 표현은 쓰지 않는다: 인상적, 흐름으로 읽힌다, 주목할 만하다, 중요해 보인다, ~라고 할 수 있다, 의미가 있다, 이는 ~를 보여준다, 한편, 이처럼, 앞으로가 기대된다, 눈여겨볼 만하다, 혁신적, 획기적, 강력한, 다양한, 폭넓은, 게임 체인저, 새로운 지평, 살펴본다, 함께 알아보자. 이모지와 감탄부호도 쓰지 않는다.
+
+[항목 구성]
+- 항목은 두 종류다. 릴리스·변경은 무엇이 바뀌었는지와 영향·마이그레이션 방법을 쓴다. 글·분석은 핵심 주장과 그 근거를 쓴다.
+- 고정된 소제목 칸을 만들지 않는다. 명령어나 코드는 후보 본문에 있을 때만 "바로 해 볼 것"으로 넣는다.
+- title: 고유명사 + 버전 + 변화. "~ 소식", "~ 발표"는 쓰지 않는다.
+- body: 마크다운. 링크는 쓰지 마라(원문 링크는 코드가 붙인다).
+- reason: 이 항목을 고른 이유 한 줄(관리자용 메모).
+
+[출력]
+- subtitle: 이번 주 핵심을 담은 명사형 구. 고유명사 2개 이내, 40자 이내, 마침표 없음, 추상 표현 금지.
+- highlights: 이번 주 핵심 3줄. 각 줄은 한 문장이다.
+- items: 고른 항목. id 는 후보의 id 를 그대로 쓴다.
+
+[후보]
+${formatCandidates(candidates)}`;
 }
 
-function formatHf(models: HfTrendingModel[]): string {
-  return models
-    .map((m, i) => `${i + 1}. ${m.id} (좋아요 ${m.likes}, 다운로드 ${m.downloads}, 분야: ${m.pipelineTag ?? "미상"})\n링크: ${m.url}`)
-    .join("\n");
-}
-
-function formatOpenRouter(models: OpenRouterTrendingModel[]): string {
-  return models
-    .map(
-      (m, i) =>
-        `${i + 1}. ${m.modelSlug} — 이번 주 토큰 사용량 전주 대비 ${(m.growthRatio * 100).toFixed(0)}% 증가 (지난주 ${m.lastWeekTokens.toLocaleString()} → 이번주 ${m.thisWeekTokens.toLocaleString()})`,
-    )
-    .join("\n");
-}
-
-function buildPrompt(input: DigestInput): string {
-  return `너는 AI 테크 블로그의 "이번 주 AI 테크뉴스" 코너를 작성하는 에디터다.
-아래는 지난 1주일간 여러 AI 랩 공식 블로그, AI/개발도구 분야 인물 블로그, 그리고 GitHub·Hugging Face·OpenRouter의 최신 동향 데이터다.
-이 정보를 바탕으로 AI에 관심 있는 개발자가 읽었을 때 흥미롭거나 실무에 도움이 될 만한 내용을 골라 한국어 블로그 포스트를 작성하라.
-
-[전체 규칙]
-- AI/개발도구와 직접 관련 없는 항목은 과감히 제외해도 된다.
-- 원문을 그대로 베끼지 말고 반드시 너 자신의 표현으로 다시 써라(paraphrase).
-- 각 기사당 인용은 최대 1회, 15단어 미만으로만 허용한다. 인용이 꼭 필요하지 않다면 생략해도 된다.
-- 인물 블로그·뉴스레터 출처는 필자 개인의 주장/경험일 수 있으므로, 검증된 사실처럼 단정하지 말고 "~라고 소개한다", "~라는 접근을 제안한다"처럼 출처 기반 어조로 서술하라.
-- 전체 글은 짧은 인사말로 시작해서, 항목별 섹션(## 제목)으로 구성하고, 마지막에 간단한 마무리 문장으로 끝내라.
-- subtitle 은 게시글 제목의 "- " 뒤에 붙는 부제다. 그 주의 핵심 흐름을 담아 10단어 이내 짧은 한국어 구(句)로만 작성하라 (예: "AI 에이전트 보안과 실효성 높은 개발 도구"). 완전한 문장이나 마침표는 쓰지 마라.
-
-[뉴스/블로그 섹션 작성 지침]
-- 아래 [뉴스·블로그 글 목록]에서 골라 소개. 각 항목 끝에는 반드시 원문 링크를 마크다운 링크 형식으로 포함하라.
-- 비슷한 주제끼리 묶어서 소개해도 좋다.
-
-[GitHub 섹션 작성 지침]
-- [GitHub 급상승 레포 랭킹]을 순위·레포명·스타 수가 보이는 목록(또는 표)으로 먼저 보여주고, 그중 상위 5개는 어떤 프로젝트인지 설명하는 문단을 덧붙여라.
-- [주목할 개발자 후보]에서 상위 3명을 소개하며, 그 사람의 대표 레포들을 근거로 "요즘 어떤 작업을 하고 있는지"를 설명하라. 이건 GitHub 공식 트렌딩 개발자 기능이 아니라 급상승 레포 소유자를 근사한 것이라는 점은 본문에 드러낼 필요 없다(내부 로직일 뿐).
-
-[Hugging Face 섹션 작성 지침]
-- [Hugging Face 인기 모델]을 순위 목록으로 보여주고, 눈에 띄는 모델 한두 개는 간단히 설명하라.
-
-[OpenRouter 섹션 작성 지침]
-- [OpenRouter 급상승 모델]을 "전주 대비 사용량 증가율" 기준 목록으로 보여줘라. 벤치마크 성능 수치는 이 섹션에서 다루지 않는다(제공되는 데이터가 없다).
-
-[뉴스·블로그 글 목록]
-${formatItems(input.items)}
-
-[GitHub 급상승 레포 랭킹 / 주목할 개발자 후보]
-${formatGithub(input.github)}
-
-[Hugging Face 인기 모델]
-${formatHf(input.hfModels)}
-
-[OpenRouter 급상승 모델]
-${formatOpenRouter(input.openRouterModels)}`;
-}
-
-export async function summarizeWeeklyTechNews(input: DigestInput): Promise<DigestPost> {
+async function callOpenAI(prompt: string): Promise<{ text: string; truncated: boolean }> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY 환경변수가 설정되지 않았습니다.");
   }
 
-  const res = await fetch(OPENAI_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages: [{ role: "user", content: buildPrompt(input) }],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "digest_post",
-          strict: true,
-          schema: {
-            type: "object",
-            properties: {
-              subtitle: { type: "string" },
-              content: { type: "string" },
+  const res = await fetchWithTimeout(
+    OPENAI_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: OPENAI_MODEL,
+        messages: [{ role: "user", content: prompt }],
+        max_completion_tokens: 16000,
+        response_format: {
+          type: "json_schema",
+          json_schema: {
+            name: "digest_post",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                subtitle: { type: "string" },
+                highlights: { type: "array", items: { type: "string" } },
+                items: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "integer" },
+                      title: { type: "string" },
+                      body: { type: "string" },
+                      reason: { type: "string" },
+                    },
+                    required: ["id", "title", "body", "reason"],
+                    additionalProperties: false,
+                  },
+                },
+              },
+              required: ["subtitle", "highlights", "items"],
+              additionalProperties: false,
             },
-            required: ["subtitle", "content"],
-            additionalProperties: false,
           },
         },
-      },
-    }),
-  });
+      }),
+    },
+    OPENAI_TIMEOUT_MS,
+  );
 
   if (!res.ok) {
     const errText = await res.text();
@@ -141,6 +116,63 @@ export async function summarizeWeeklyTechNews(input: DigestInput): Promise<Diges
   if (!text) {
     throw new Error("OpenAI 응답에서 텍스트를 찾을 수 없습니다.");
   }
+  const truncated = data?.choices?.[0]?.finish_reason === "length";
+  if (truncated) {
+    console.warn("OpenAI 출력이 max_completion_tokens 한도로 잘렸습니다(finish_reason=length).");
+  }
+  return { text, truncated };
+}
 
-  return JSON.parse(text) as DigestPost;
+// LLM 을 부르고, 형식 오류나 금지 표현이 있으면 그 내용을 알려 주며 1회만 다시 부른다.
+// startedAt: 파이프라인 시작 시각. 이미 오래 걸렸으면 재시도하지 않는다.
+// 재시도가 실패(타임아웃·5xx·형식 오류)해도 1차 결과가 있으면 그것을 돌려준다.
+export async function summarizeCandidates(candidates: Candidate[], startedAt: number = Date.now()): Promise<SummaryResult> {
+  const prompt = buildPrompt(candidates);
+  const ids = new Set(candidates.map((c) => c.id));
+
+  let best: SummaryResult | undefined;
+  let feedback = "";
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    if (attempt === 1 && Date.now() - startedAt > RETRY_DEADLINE_MS) {
+      console.warn("경과 시간이 길어 재시도를 건너뜁니다.");
+      break;
+    }
+
+    let response: { text: string; truncated: boolean };
+    try {
+      response = await callOpenAI(prompt + feedback);
+    } catch (err) {
+      if (attempt === 1 && best) {
+        console.error("재시도 호출 실패, 1차 결과를 사용합니다:", err);
+        break;
+      }
+      throw err;
+    }
+
+    let parsed: ParsedOutput;
+    try {
+      parsed = parseLlmOutput(response.text, ids);
+    } catch (err) {
+      if (attempt === 1) {
+        if (best) break;
+        throw err;
+      }
+      const reason = response.truncated
+        ? "출력이 길이 제한으로 잘려 JSON 이 완성되지 않았다. 항목 수와 본문을 줄여서"
+        : `형식 검증에 실패했다: ${err instanceof Error ? err.message : String(err)}`;
+      console.warn(`재시도 사유: ${reason}`);
+      feedback = `\n\n[수정 요청] 직전 출력이 ${reason}\n규칙에 맞게 다시 작성하라.`;
+      continue;
+    }
+
+    const bannedLeft = findBannedPhrases(parsed);
+    best = { ...parsed, bannedLeft };
+    if (bannedLeft.length === 0) break;
+    console.warn(`재시도 사유: 금지 표현 ${bannedLeft.join(", ")}`);
+    feedback = `\n\n[수정 요청] 직전 출력에서 금지 표현이 발견됐다: ${bannedLeft.join(", ")}\n이 표현을 쓰지 않고 같은 내용으로 다시 작성하라.`;
+  }
+
+  if (!best) throw new Error("요약 결과를 만들지 못했습니다.");
+  return best;
 }

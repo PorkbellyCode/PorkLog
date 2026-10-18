@@ -1,20 +1,19 @@
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-const { fetchWeeklyTechNews } = await import("../src/lib/tech-digest/fetch-feeds.ts");
-const { fetchGithubTrending } = await import("../src/lib/tech-digest/fetch-github.ts");
-const { fetchTrendingModels: fetchHfTrendingModels } = await import("../src/lib/tech-digest/fetch-huggingface.ts");
-const { fetchOpenRouterTrending } = await import("../src/lib/tech-digest/fetch-openrouter.ts");
-const { summarizeWeeklyTechNews } = await import("../src/lib/tech-digest/summarize.ts");
-const { createDigestPost } = await import("../src/lib/tech-digest/create-digest-post.ts");
+const { buildWeeklyDigest } = await import("../src/lib/tech-digest/pipeline.ts");
+const { createDigestPost, digestExists, getRecentDigestLinks } = await import(
+  "../src/lib/tech-digest/create-digest-post.ts"
+);
 
-const [items, github, hfModels, openRouterModels] = await Promise.all([
-  fetchWeeklyTechNews(),
-  fetchGithubTrending(),
-  fetchHfTrendingModels(),
-  fetchOpenRouterTrending(),
-]);
+if (await digestExists()) {
+  console.log({ status: "skipped", reason: "duplicate_slug" });
+  process.exit(0);
+}
 
-const post = await summarizeWeeklyTechNews({ items, github, hfModels, openRouterModels });
-const result = await createDigestPost(post);
-console.log(result);
+const built = await buildWeeklyDigest(await getRecentDigestLinks());
+if (built.status === "skipped") {
+  console.log(built);
+  process.exit(0);
+}
+console.log(await createDigestPost(built.post));

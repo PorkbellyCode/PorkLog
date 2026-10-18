@@ -1,47 +1,37 @@
-// DB에 쓰지 않고 fetch → summarize → 스키마 검증까지만 확인하는 드라이런.
-// DATABASE_URL 없이도 실행 가능 (create-digest-post.ts 를 거치지 않음).
+// DB 에 쓰지 않고 수집 → 후보 정리 → LLM → 조립 → 스키마 검증까지 확인하는 드라이런.
+// DATABASE_URL 없이도 실행 가능 (DB 를 읽는 이력 필터는 건너뛴다).
+// 실행: pnpm tsx scripts/dry-run-tech-digest.mjs  (OPENAI_API_KEY, OPENROUTER_API_KEY 필요)
 import { config } from "dotenv";
 config({ path: ".env.local" });
 
-const { fetchWeeklyTechNews } = await import("../src/lib/tech-digest/fetch-feeds.ts");
-const { fetchGithubTrending } = await import("../src/lib/tech-digest/fetch-github.ts");
-const { fetchTrendingModels: fetchHfTrendingModels } = await import("../src/lib/tech-digest/fetch-huggingface.ts");
-const { fetchOpenRouterTrending } = await import("../src/lib/tech-digest/fetch-openrouter.ts");
-const { summarizeWeeklyTechNews } = await import("../src/lib/tech-digest/summarize.ts");
+const { buildWeeklyDigest } = await import("../src/lib/tech-digest/pipeline.ts");
 const { postInputSchema } = await import("../src/lib/post-schema.ts");
 
-const [items, github, hfModels, openRouterModels] = await Promise.all([
-  fetchWeeklyTechNews(),
-  fetchGithubTrending(),
-  fetchHfTrendingModels(),
-  fetchOpenRouterTrending(),
-]);
-console.log(
-  `수집된 아이템: 뉴스/블로그 ${items.length}개, GitHub 레포 ${github.repos.length}개, HF 모델 ${hfModels.length}개, OpenRouter 모델 ${openRouterModels.length}개`,
-);
+const built = await buildWeeklyDigest([]);
 
-if (items.length === 0 && github.repos.length === 0 && hfModels.length === 0 && openRouterModels.length === 0) {
-  console.log("아이템이 없어 요약 없이 종료합니다.");
+if (built.status === "skipped") {
+  console.log(`발행하지 않고 종료: ${built.reason}`);
   process.exit(0);
 }
 
-const post = await summarizeWeeklyTechNews({ items, github, hfModels, openRouterModels });
-const title = `이번 주 AI 테크뉴스 - ${post.subtitle}`;
-console.log(`생성된 제목: ${title}`);
+console.log(`후보 ${built.stats.candidates}개 중 ${built.stats.selected}개 선택`);
+console.log(`제목: ${built.post.title}`);
+console.log(`공개 예정: ${built.post.publishedAt.toISOString()}`);
 
 const result = postInputSchema.safeParse({
-  title,
+  title: built.post.title,
   slug: "dry-run-check",
-  content: post.content,
+  content: built.post.content,
   category: "dev",
   thumbnail: null,
   series: "dev-news",
   tags: ["dev-news"],
+  isPrivate: false,
+  publishedAt: built.post.publishedAt,
 });
 
-if (result.success) {
-  console.log("스키마 검증 통과 (DB 저장 없음)");
-} else {
-  console.log("스키마 검증 실패:");
-  console.log(result.error.issues);
-}
+console.log(result.success ? "스키마 검증 통과 (DB 저장 없음)" : "스키마 검증 실패:");
+if (!result.success) console.log(result.error.issues);
+
+console.log("\n──────── 본문 ────────\n");
+console.log(built.post.content);

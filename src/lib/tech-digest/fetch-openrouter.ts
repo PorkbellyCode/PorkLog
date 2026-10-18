@@ -1,5 +1,6 @@
 // OpenRouter 공식 Data API(rankings-daily)로 "지난주 대비 사용량 급상승 모델"을 계산한다.
 // 벤치마크 점수는 이 API로 제공되지 않아 다루지 않는다(요청 시 뺀 부분).
+import { fetchWithTimeout } from "./http";
 
 export type TrendingModel = {
   modelSlug: string;
@@ -29,7 +30,7 @@ export async function fetchOpenRouterTrending(): Promise<TrendingModel[]> {
   const cutoff = isoDate(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)); // 이번 주/지난 주 경계
 
   const url = `https://openrouter.ai/api/v1/datasets/rankings-daily?start_date=${start}&end_date=${end}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` } });
+  const res = await fetchWithTimeout(url, { headers: { Authorization: `Bearer ${apiKey}` } }, 15_000);
   if (!res.ok) {
     throw new Error(`OpenRouter Data API 요청 실패: HTTP ${res.status}`);
   }

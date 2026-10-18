@@ -1,53 +1,59 @@
 import { XMLParser } from "fast-xml-parser";
+import { fetchWithTimeout, USER_AGENT } from "./http";
+import { matchesCategoryAllowList, pickLatestStableRelease } from "./filters";
+import { extractArticleText, htmlToText, truncate } from "./text";
+import { BODY_LIMIT, type DigestItem } from "./types";
 
-export type DigestItem = {
-  source: string;
-  title: string;
-  link: string;
-  description: string;
-  pubDate: Date;
-};
+export type { DigestItem };
 
 type FeedConfig = {
   name: string;
   url: string;
+  kind: "article" | "release";
+  // 소스당 최대 항목 수(릴리스는 항상 1개).
+  limit: number;
+  // 있으면 이 카테고리 중 하나를 가진 항목만 쓴다.
+  categoryAllow?: string[];
 };
 
-// AI 랩 공식 블로그. Anthropic 은 공식 RSS 를 제공하지 않아 제외했다.
-const AI_LAB_FEEDS: FeedConfig[] = [
-  { name: "OpenAI", url: "https://openai.com/news/rss.xml" },
-  { name: "Google DeepMind", url: "https://deepmind.google/blog/rss.xml" },
-  { name: "Hugging Face Blog", url: "https://huggingface.co/blog/feed.xml" },
+const ARTICLE_LIMIT = 2;
+
+function article(name: string, url: string, extra: Partial<FeedConfig> = {}): FeedConfig {
+  return { name, url, kind: "article", limit: ARTICLE_LIMIT, ...extra };
+}
+
+function release(repo: string): FeedConfig {
+  return { name: `${repo} 릴리스`, url: `https://github.com/${repo}/releases.atom`, kind: "release", limit: 1 };
+}
+
+// 고객 사례·스타트업 소개가 섞여 있어 제품·엔지니어링·API·연구 카테고리만 쓴다.
+const OPENAI_CATEGORIES = ["Product", "Engineering", "API", "Research"];
+
+const FEEDS: FeedConfig[] = [
+  article("OpenAI", "https://openai.com/news/rss.xml", { categoryAllow: OPENAI_CATEGORIES }),
+  article("Hugging Face Blog", "https://huggingface.co/blog/feed.xml"),
+  article("Andrej Karpathy", "https://karpathy.github.io/feed.xml"),
+  article("Simon Willison", "https://simonwillison.net/atom/everything/"),
+  article("Sebastian Raschka", "https://sebastianraschka.com/rss_feed.xml"),
+  article("Eugene Yan", "https://eugeneyan.com/rss/"),
+  article("Hamel Husain", "https://hamel.dev/index.xml"),
+  article("Lilian Weng", "https://lilianweng.github.io/index.xml"),
+  article("Dan Abramov", "https://overreacted.io/rss.xml"),
+  article("Kent C. Dodds", "https://kentcdodds.com/blog/rss.xml"),
+  article("Addy Osmani", "https://addyosmani.com/feed.xml"),
+  article("Anthony Fu", "https://antfu.me/feed.xml"),
+  article("Vercel 블로그", "https://vercel.com/atom"),
+  article("Cloudflare 블로그", "https://blog.cloudflare.com/rss/"),
+  release("vercel/next.js"),
+  release("facebook/react"),
+  release("microsoft/TypeScript"),
+  release("nodejs/node"),
+  release("anthropics/claude-code"),
 ];
 
-// AI 연구/엔지니어링 인물 블로그·뉴스레터.
-const PEOPLE_FEEDS: FeedConfig[] = [
-  { name: "Andrej Karpathy", url: "https://karpathy.github.io/feed.xml" },
-  { name: "Simon Willison", url: "https://simonwillison.net/atom/everything/" },
-  { name: "Latent Space (swyx)", url: "https://www.latent.space/feed" },
-  { name: "Jeremy Howard (fast.ai)", url: "https://www.fast.ai/index.xml" },
-  { name: "Nathan Lambert (Interconnects)", url: "https://interconnects.ai/feed" },
-  { name: "Sebastian Raschka", url: "https://sebastianraschka.com/rss_feed.xml" },
-  { name: "Eugene Yan", url: "https://eugeneyan.com/rss/" },
-  { name: "Hamel Husain", url: "https://hamel.dev/index.xml" },
-  { name: "Lilian Weng", url: "https://lilianweng.github.io/index.xml" },
-  { name: "Chip Huyen", url: "https://huyenchip.com/feed.xml" },
-];
-
-// 오픈소스 프레임워크/개발도구 인플루언서.
-const TOOLING_FEEDS: FeedConfig[] = [
-  { name: "Dan Abramov", url: "https://overreacted.io/rss.xml" },
-  { name: "Kent C. Dodds", url: "https://kentcdodds.com/blog/rss.xml" },
-  { name: "Addy Osmani", url: "https://addyosmani.com/feed.xml" },
-  { name: "Anthony Fu", url: "https://antfu.me/feed.xml" },
-  { name: "Svelte 블로그", url: "https://svelte.dev/blog/rss.xml" },
-  { name: "Vercel 블로그", url: "https://vercel.com/atom" },
-];
-
-const FEEDS: FeedConfig[] = [...AI_LAB_FEEDS, ...PEOPLE_FEEDS, ...TOOLING_FEEDS];
-
-const ITEMS_PER_SOURCE = 5;
 const LOOKBACK_DAYS = 7;
+// 피드 본문이 이보다 짧으면 링크를 열어 본문을 가져온다.
+const SHORT_BODY = 300;
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -57,13 +63,15 @@ const parser = new XMLParser({
 });
 
 // XML 파싱 결과의 텍스트/속성 필드는 문자열, CDATA 객체, 또는 undefined 로 온다.
-type XmlValue = string | number | { __cdata: string } | { "@_href"?: string } | undefined;
+type XmlValue = string | number | { __cdata: string } | { "#text": string } | { "@_href"?: string } | undefined;
 
 // RSS <item> 또는 Atom <entry> 하나에서 실제로 읽는 필드만 명시.
 type XmlNode = {
   title?: XmlValue;
   link?: XmlValue | XmlValue[];
   description?: XmlValue;
+  "content:encoded"?: XmlValue;
+  category?: XmlValue | XmlValue[];
   pubDate?: XmlValue;
   content?: XmlValue;
   summary?: XmlValue;
@@ -79,12 +87,16 @@ function textOf(value: XmlValue): string {
   if (typeof value === "object" && "__cdata" in value) {
     return String(value.__cdata);
   }
+  // <content type="html"> 처럼 속성이 붙은 요소는 텍스트가 #text 에 들어온다.
+  if (typeof value === "object" && "#text" in value) {
+    return String(value["#text"]);
+  }
   return String(value);
 }
 
-// Atom content 필드는 HTML 포함 — 태그 제거.
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+function categoriesOf(value: XmlNode["category"]): string[] {
+  const list = Array.isArray(value) ? value : value == null ? [] : [value];
+  return list.map((v) => textOf(v as XmlValue).trim()).filter(Boolean);
 }
 
 function extractAtomLink(linkField: XmlNode["link"]): string {
@@ -104,58 +116,101 @@ function toNodeList(raw: XmlNode | XmlNode[] | undefined): XmlNode[] {
   return Array.isArray(raw) ? raw : raw ? [raw] : [];
 }
 
-function parseRss(parsed: RssParsed, sourceName: string): DigestItem[] {
-  return toNodeList(parsed?.rss?.channel?.item).map((item) => ({
-    source: sourceName,
-    title: textOf(item.title),
-    link: textOf(item.link as XmlValue),
-    description: stripHtml(textOf(item.description)),
-    pubDate: new Date(textOf(item.pubDate)),
-  }));
+function toItem(feed: FeedConfig, link: string, node: XmlNode, body: string, pubDate: string): DigestItem {
+  return {
+    kind: feed.kind,
+    source: feed.name,
+    title: htmlToText(textOf(node.title)),
+    link,
+    body: truncate(htmlToText(body)),
+    pubDate: new Date(pubDate),
+    categories: categoriesOf(node.category),
+  };
 }
 
-function parseAtom(parsed: AtomParsed, sourceName: string): DigestItem[] {
-  return toNodeList(parsed?.feed?.entry).map((entry) => ({
-    source: sourceName,
-    title: textOf(entry.title),
-    link: extractAtomLink(entry.link),
-    description: stripHtml(textOf(entry.content ?? entry.summary)),
-    pubDate: new Date(textOf(entry.published ?? entry.updated)),
-  }));
+export function parseRss(parsed: RssParsed, feed: FeedConfig): DigestItem[] {
+  return toNodeList(parsed?.rss?.channel?.item).map((item) =>
+    toItem(
+      feed,
+      textOf(item.link as XmlValue),
+      item,
+      textOf(item["content:encoded"] ?? item.description),
+      textOf(item.pubDate),
+    ),
+  );
+}
+
+export function parseAtom(parsed: AtomParsed, feed: FeedConfig): DigestItem[] {
+  return toNodeList(parsed?.feed?.entry).map((entry) =>
+    toItem(
+      feed,
+      extractAtomLink(entry.link),
+      entry,
+      textOf(entry.content ?? entry.summary),
+      textOf(entry.published ?? entry.updated),
+    ),
+  );
 }
 
 async function fetchFeed(feed: FeedConfig): Promise<DigestItem[]> {
-  const res = await fetch(feed.url, {
-    headers: { "User-Agent": "Mozilla/5.0 (compatible; PorkLogBot/1.0)" },
-  });
+  const res = await fetchWithTimeout(feed.url, { headers: { "User-Agent": USER_AGENT } });
   if (!res.ok) {
     throw new Error(`${feed.name} RSS 요청 실패: HTTP ${res.status}`);
   }
   const xml = await res.text();
   const parsed = parser.parse(xml) as RssParsed & AtomParsed;
 
-  const items = parsed.feed ? parseAtom(parsed, feed.name) : parseRss(parsed, feed.name);
+  const items = parsed.feed ? parseAtom(parsed, feed) : parseRss(parsed, feed);
 
   const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000);
+  const recent = items.filter(
+    (item) => item.title && item.link && !isNaN(item.pubDate.getTime()) && item.pubDate >= cutoff,
+  );
 
-  return items
-    .filter((item) => !isNaN(item.pubDate.getTime()) && item.pubDate >= cutoff)
+  if (feed.kind === "release") {
+    const latest = pickLatestStableRelease(recent);
+    return latest ? [latest] : [];
+  }
+
+  return recent
+    .filter((item) => matchesCategoryAllowList(item.categories, feed.categoryAllow))
     .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
-    .slice(0, ITEMS_PER_SOURCE);
+    .slice(0, feed.limit);
 }
 
-// 4개 피드를 병렬 수집. 개별 피드 실패는 전체를 막지 않고 콘솔에만 남긴다.
-export async function fetchWeeklyTechNews(): Promise<DigestItem[]> {
+// 피드 본문이 짧은 글은 링크를 열어 본문을 보충한다. 실패하면 짧은 본문 그대로 둔다.
+async function enrichShortBodies(items: DigestItem[]): Promise<DigestItem[]> {
+  return Promise.all(
+    items.map(async (item) => {
+      if (item.kind !== "article" || item.body.length >= SHORT_BODY) return item;
+      try {
+        const res = await fetchWithTimeout(item.link, { headers: { "User-Agent": USER_AGENT } });
+        if (!res.ok) return item;
+        const text = extractArticleText(await res.text());
+        return text.length > item.body.length ? { ...item, body: text.slice(0, BODY_LIMIT) } : item;
+      } catch {
+        return item;
+      }
+    }),
+  );
+}
+
+export type FeedResult = { items: DigestItem[]; failedSources: string[] };
+
+// 피드를 병렬 수집. 개별 피드 실패는 전체를 막지 않고 실패한 소스 이름만 돌려준다.
+export async function fetchWeeklyTechNews(): Promise<FeedResult> {
   const results = await Promise.allSettled(FEEDS.map(fetchFeed));
 
   const items: DigestItem[] = [];
+  const failedSources: string[] = [];
   results.forEach((result, i) => {
     if (result.status === "fulfilled") {
       items.push(...result.value);
     } else {
       console.error(`${FEEDS[i].name} 수집 실패:`, result.reason);
+      failedSources.push(FEEDS[i].name);
     }
   });
 
-  return items;
+  return { items: await enrichShortBodies(items), failedSources };
 }
