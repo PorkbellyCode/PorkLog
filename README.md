@@ -75,7 +75,7 @@ pnpm install
 pnpm dev                    # http://localhost:3000
 pnpm lint --max-warnings=0  # CI와 같은 검증
 pnpm typecheck
-pnpm test                   # .env.test 의 테스트 전용 DB 사용 (테스트마다 posts 테이블을 비움)
+pnpm test                   # DB 없이 도는 단위 테스트
 ```
 
 <details>

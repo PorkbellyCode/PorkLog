@@ -3,6 +3,7 @@
 import { db } from "@/db";
 import { posts } from "@/db/schema";
 import { postInputSchema } from "@/lib/post-schema";
+import { resolvePublishedAt, resolveSeriesOrder } from "@/lib/post-rules";
 import { z } from "zod";
 import { eq, and, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -140,19 +141,11 @@ export async function updatePost(
     .from(posts)
     .where(eq(posts.id, id));
 
-  // 시리즈가 그대로면 기존 회차를 유지하고, 바뀌었으면(새로 시리즈에 들어가는 경우 포함)
-  // 새 시리즈의 다음 번호를 다시 계산한다.
-  const seriesOrder =
-    series === (current?.series ?? null)
-      ? (current?.seriesOrder ?? null)
-      : series
-        ? await getNextSeriesOrder(series)
-        : null;
+  // 시리즈가 바뀌어 다음 회차가 필요할 때만 DB 에서 최대 회차를 읽는다.
+  const order = resolveSeriesOrder(current, series);
+  const seriesOrder = order === "next" ? await getNextSeriesOrder(series!) : order;
 
-  // 이미 발행 시각이 지난(=한 번이라도 공개됐던) 글은 예약발행 대상이 아니므로
-  // 수정 화면에서 넘어온 publishedAt 은 무시하고 기존 값을 유지한다.
-  const alreadyPublished = !!current && current.publishedAt <= new Date();
-  const effectivePublishedAt = alreadyPublished ? current.publishedAt : publishedAt;
+  const effectivePublishedAt = resolvePublishedAt(current?.publishedAt, publishedAt, new Date());
 
   await db
     .update(posts)

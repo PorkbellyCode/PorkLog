@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 에이전트 worktree 사본은 검사하지 않는다.
+    ".claude/**",
   ]),
 ]);
 

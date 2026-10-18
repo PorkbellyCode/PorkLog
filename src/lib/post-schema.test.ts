@@ -116,3 +116,20 @@ describe("postInputSchema - isPrivate / publishedAt", () => {
     }
   });
 });
+
+describe("postInputSchema - series", () => {
+  test("공백만 있는 시리즈명은 null로 변환된다", () => {
+    const result = postInputSchema.safeParse({ ...valid, series: "  " });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.series).toBeNull();
+    }
+  });
+
+  test("시리즈명 60자는 통과, 61자는 실패", () => {
+    const ok = postInputSchema.safeParse({ ...valid, series: "a".repeat(60) });
+    const fail = postInputSchema.safeParse({ ...valid, series: "a".repeat(61) });
+    expect(ok.success).toBe(true);
+    expect(fail.success).toBe(false);
+  });
+});
