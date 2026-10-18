@@ -6,7 +6,7 @@ import ProjectGallery from "@/components/project-gallery";
 import SkillBadge from "@/components/skill-badge";
 
 const DESCRIPTION =
-  "혼자 기획·개발·배포한 사이드 프로젝트 PorkLog, WorkWrap, CRDD의 화면과 기술 결정.";
+  "사이드 프로젝트 PorkLog, WorkWrap, CRDD의 핵심 기능과 기술 결정.";
 
 export const metadata: Metadata = {
   title: "Portfolio",
@@ -200,13 +200,11 @@ export default function PortfolioPage() {
       <div className="mx-auto w-full max-w-5xl space-y-14">
         <section className="space-y-4">
           <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-5xl">
-            혼자 만들고
-            <br />
-            직접 운영하는 서비스
+            Portfolio
           </h1>
           <p className="max-w-xl text-sm leading-relaxed text-fg-muted">
-            기획부터 배포까지 혼자 맡은 사이드 프로젝트 3개입니다. 모두 Next.js·TypeScript 풀스택이고 LLM API를
-            연동했습니다. 회사 프로젝트는 고객사 시스템이라 화면을 공개할 수 없습니다. 대신 맡은 역할과 성과는{" "}
+            사이드 프로젝트 3개의 핵심 기능과 기술 결정을 정리했습니다. 모두 Next.js·TypeScript 풀스택이고 LLM
+            API를 연동했습니다. 회사 프로젝트는 고객사 시스템이라 화면을 공개할 수 없어, 역할과 성과를{" "}
             <Link href="/resume" className="text-accent-fg underline underline-offset-4">
               Resume
             </Link>
