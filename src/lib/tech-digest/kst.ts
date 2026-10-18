@@ -14,11 +14,3 @@ export function nextMondayNineKst(now: Date): Date {
   if (target <= kst.getTime()) target += 7 * DAY_MS;
   return new Date(target - KST_OFFSET_MS);
 }
-
-// "{M}월 {W}주차". 그 주의 목요일이 속한 달을 기준으로 하고(ISO 주차 규칙), W 는 목요일의 일자로 센다.
-export function monthWeekLabel(date: Date): string {
-  const kst = new Date(date.getTime() + KST_OFFSET_MS);
-  const dayOfWeek = kst.getUTCDay() === 0 ? 7 : kst.getUTCDay(); // 월=1 … 일=7
-  const thursday = new Date(kst.getTime() + (4 - dayOfWeek) * DAY_MS);
-  return `${thursday.getUTCMonth() + 1}월 ${Math.ceil(thursday.getUTCDate() / 7)}주차`;
-}

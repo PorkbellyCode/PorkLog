@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { hasExcludedKeyword } from "./filters";
-import { monthWeekLabel } from "./kst";
 import type { Candidate } from "./types";
 import type { TrendingModel as HfModel } from "./fetch-huggingface";
 import type { TrendingModel as OpenRouterModel } from "./fetch-openrouter";
@@ -148,8 +147,8 @@ export function renderNumbersSection(hf: HfModel[], openRouter: OpenRouterModel[
 
 // ── 조립 ──────────────────────────────────────────────
 
-export function buildTitle(subtitle: string, publishedAt: Date): string {
-  return `${monthWeekLabel(publishedAt)} 개발 뉴스: ${subtitle}`;
+export function buildTitle(subtitle: string): string {
+  return `이번 주 AI 테크뉴스 - ${subtitle}`;
 }
 
 // 닫히지 않은 HTML 주석이 뒤 내용을 삼키지 않도록 LLM 출력에서 주석 시작을 지운다.
@@ -167,11 +166,10 @@ export function composeDigest(params: {
   candidates: Candidate[];
   hfModels: HfModel[];
   openRouterModels: OpenRouterModel[];
-  publishedAt: Date;
   failedSources: string[];
   bannedLeft: string[];
 }): { title: string; content: string } {
-  const { output, candidates, publishedAt } = params;
+  const { output, candidates } = params;
   const byId = new Map(candidates.map((c) => [c.id, c]));
   const usedIds = new Set(output.items.map((i) => i.id));
 
@@ -197,5 +195,5 @@ export function composeDigest(params: {
     .filter(Boolean)
     .join("\n\n");
 
-  return { title: buildTitle(output.subtitle, publishedAt), content };
+  return { title: buildTitle(output.subtitle), content };
 }

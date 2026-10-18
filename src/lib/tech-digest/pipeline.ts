@@ -62,7 +62,6 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
     candidates,
     hfModels,
     openRouterModels,
-    publishedAt,
     failedSources,
     bannedLeft: summary.bannedLeft,
   });

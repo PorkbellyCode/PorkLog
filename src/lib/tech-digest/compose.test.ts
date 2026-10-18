@@ -98,8 +98,8 @@ describe("조립", () => {
   ];
   const output = parseLlmOutput(llm([item(1), item(2)]), new Set([1, 2]));
 
-  test("제목은 'M월 W주차 개발 뉴스: 부제'", () => {
-    expect(buildTitle("부제", new Date("2026-10-19T09:00:00+09:00"))).toBe("10월 4주차 개발 뉴스: 부제");
+  test("제목은 기존 형식 '이번 주 AI 테크뉴스 - 부제'", () => {
+    expect(buildTitle("부제")).toBe("이번 주 AI 테크뉴스 - 부제");
   });
 
   test("본문 순서: 메모 → 하이라이트 → 항목(+원문 링크) → 숫자 표", () => {
@@ -108,7 +108,6 @@ describe("조립", () => {
       candidates,
       hfModels: [],
       openRouterModels: [],
-      publishedAt: new Date("2026-10-19T09:00:00+09:00"),
       failedSources: ["OpenRouter"],
       bannedLeft: ["강력한"],
     });
@@ -128,7 +127,6 @@ describe("조립", () => {
       candidates,
       hfModels: [],
       openRouterModels: [],
-      publishedAt: new Date(),
       failedSources: [],
       bannedLeft: [],
     });
@@ -144,7 +142,6 @@ describe("조립", () => {
       candidates,
       hfModels: [],
       openRouterModels: [],
-      publishedAt: new Date(),
       failedSources: [],
       bannedLeft: [],
     });

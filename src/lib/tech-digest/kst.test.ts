@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { kstDateString, monthWeekLabel, nextMondayNineKst } from "./kst";
+import { kstDateString, nextMondayNineKst } from "./kst";
 
 // KST 시각을 Date 로 만든다.
 const kst = (iso: string) => new Date(`${iso}+09:00`);
@@ -21,17 +21,6 @@ describe("nextMondayNineKst", () => {
   });
   test("UTC 날짜와 KST 날짜가 다른 시각(일요일 23:30 KST)도 처리", () => {
     expect(nextMondayNineKst(kst("2026-10-18T23:30:00")).toISOString()).toBe(kst("2026-10-19T09:00:00").toISOString());
-  });
-});
-
-describe("monthWeekLabel", () => {
-  test("월요일 발행일 기준 'M월 W주차'", () => {
-    expect(monthWeekLabel(kst("2026-10-19T09:00:00"))).toBe("10월 4주차"); // 목요일 22일
-    expect(monthWeekLabel(kst("2026-10-05T09:00:00"))).toBe("10월 2주차"); // 목요일 8일
-  });
-  test("목요일이 속한 달을 따른다 (월요일이 전월이어도)", () => {
-    expect(monthWeekLabel(kst("2026-09-28T09:00:00"))).toBe("10월 1주차"); // 목요일 10월 1일
-    expect(monthWeekLabel(kst("2026-11-02T09:00:00"))).toBe("11월 1주차"); // 목요일 11월 5일
   });
 });
 
