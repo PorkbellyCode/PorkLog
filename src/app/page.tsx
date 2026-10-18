@@ -1,10 +1,11 @@
 import { cache, Suspense } from "react";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { and, desc, eq, ilike, lte, or, count, arrayContains, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, or, count, arrayContains, type SQL } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { CATEGORIES, categoryLabel, isValidCategory, type CategoryKey } from "@/lib/categories";
+import { publicPostsCondition } from "@/lib/post-visibility";
 import { extractPreview } from "@/lib/post-preview";
 import { getCommentCounts } from "@/lib/github-discussions";
 import CopyEmailButton from "@/components/copy-email-button";
@@ -202,8 +203,7 @@ async function PostList({
       : undefined,
     activeTag ? arrayContains(posts.tags, [activeTag]) : undefined,
     activeCategory ? eq(posts.category, activeCategory) : undefined,
-    isAdmin ? undefined : eq(posts.isPrivate, false),
-    isAdmin ? undefined : lte(posts.publishedAt, new Date()),
+    isAdmin ? undefined : publicPostsCondition(),
   ].filter((c): c is SQL => c !== undefined);
 
   const whereClause: SQL | undefined =

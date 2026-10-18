@@ -2,12 +2,13 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { eq, sql, lt, gt, desc, asc } from "drizzle-orm";
+import { and, eq, sql, lt, gt, desc, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { renderMarkdown } from "@/lib/markdown";
 import Comments from "@/components/comments";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
+import { isPubliclyVisible, publicPostsCondition } from "@/lib/post-visibility";
 import { extractPreview } from "@/lib/post-preview";
 import { extractToc } from "@/lib/toc";
 import TableOfContents from "@/components/table-of-contents";
@@ -37,18 +38,19 @@ async function incrementViewCount(slug: string) {
 }
 
 // 작성일 기준 인접 글. prev = 더 오래된 글, next = 더 최신 글.
-async function getNeighbors(createdAt: Date) {
+async function getNeighbors(createdAt: Date, isAdmin: boolean) {
+  const visible = isAdmin ? undefined : publicPostsCondition();
   const [prev] = await db
     .select({ slug: posts.slug, title: posts.title })
     .from(posts)
-    .where(lt(posts.createdAt, createdAt))
+    .where(and(lt(posts.createdAt, createdAt), visible))
     .orderBy(desc(posts.createdAt))
     .limit(1);
 
   const [next] = await db
     .select({ slug: posts.slug, title: posts.title })
     .from(posts)
-    .where(gt(posts.createdAt, createdAt))
+    .where(and(gt(posts.createdAt, createdAt), visible))
     .orderBy(asc(posts.createdAt))
     .limit(1);
 
@@ -56,11 +58,13 @@ async function getNeighbors(createdAt: Date) {
 }
 
 // 같은 시리즈의 글을 회차 순으로. 회차가 비어 있으면 작성일 순으로 밀린다.
-async function getSeriesEntries(series: string) {
+async function getSeriesEntries(series: string, isAdmin: boolean) {
   return db
     .select({ slug: posts.slug, title: posts.title })
     .from(posts)
-    .where(eq(posts.series, series))
+    .where(
+      and(eq(posts.series, series), isAdmin ? undefined : publicPostsCondition()),
+    )
     .orderBy(asc(posts.seriesOrder), asc(posts.createdAt));
 }
 
@@ -75,7 +79,7 @@ export async function generateMetadata({
 
   const session = await auth.api.getSession({ headers: await headers() });
   const isAdmin = !!session;
-  if (!isAdmin && (post.isPrivate || post.publishedAt > new Date())) return {};
+  if (!isAdmin && !isPubliclyVisible(post)) return {};
 
   const image = post.thumbnail ?? defaultThumbnail(post.category);
   const description = extractPreview(post.content);
@@ -102,14 +106,14 @@ export default async function PostPage({
   const isAdmin = !!session;
 
   // 비공개 글, 아직 발행일시가 지나지 않은 예약 글은 관리자 외에는 직접 URL로도 접근 불가.
-  if (!isAdmin && (post.isPrivate || post.publishedAt > new Date())) notFound();
+  if (!isAdmin && !isPubliclyVisible(post)) notFound();
 
   await incrementViewCount(post.slug);
 
   const html = await renderMarkdown(post.content);
   const toc = extractToc(post.content);
-  const { prev, next } = await getNeighbors(post.createdAt);
-  const seriesEntries = post.series ? await getSeriesEntries(post.series) : [];
+  const { prev, next } = await getNeighbors(post.createdAt, isAdmin);
+  const seriesEntries = post.series ? await getSeriesEntries(post.series, isAdmin) : [];
 
   return (
     <main className="px-4 py-8 sm:py-12">

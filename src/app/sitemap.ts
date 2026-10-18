@@ -1,17 +1,18 @@
 import type { MetadataRoute } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { and, desc, eq, lte } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { SITE_URL } from "@/lib/site";
+import { publicPostsCondition } from "@/lib/post-visibility";
 
-// DB에 새 글이 추가돼도(=git push 없이) 사이트맵에 반영되도록 1시간마다 재생성.
-export const revalidate = 3600;
+// 예약 글 공개·저장 직후 변경이 바로 반영되도록 매 요청마다 생성한다.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const rows = await db
     .select({ slug: posts.slug, createdAt: posts.createdAt })
     .from(posts)
-    .where(and(eq(posts.isPrivate, false), lte(posts.publishedAt, new Date())))
+    .where(publicPostsCondition())
     .orderBy(desc(posts.createdAt));
 
   const postEntries: MetadataRoute.Sitemap = rows.map((p) => ({
