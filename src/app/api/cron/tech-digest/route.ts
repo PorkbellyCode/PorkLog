@@ -4,6 +4,7 @@ import { fetchGithubTrending, type GithubTrending } from "@/lib/tech-digest/fetc
 import { fetchTrendingModels as fetchHfTrendingModels } from "@/lib/tech-digest/fetch-huggingface";
 import { fetchOpenRouterTrending } from "@/lib/tech-digest/fetch-openrouter";
 import { summarizeWeeklyTechNews } from "@/lib/tech-digest/summarize";
+import { isAuthorizedCron } from "@/lib/cron-auth";
 import { createDigestPost } from "@/lib/tech-digest/create-digest-post";
 
 // Vercel Cron 응답이 캐싱되지 않고 매번 실제로 실행되도록 강제.
@@ -12,8 +13,11 @@ export const dynamic = "force-dynamic";
 const EMPTY_GITHUB: GithubTrending = { repos: [], developers: [] };
 
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET) {
+    console.error("CRON_SECRET 환경변수가 설정되지 않았습니다.");
+    return NextResponse.json({ error: "cron_secret_not_configured" }, { status: 500 });
+  }
+  if (!isAuthorizedCron(request.headers.get("authorization"), process.env.CRON_SECRET)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 

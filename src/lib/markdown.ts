@@ -2,6 +2,7 @@ import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeStringify from "rehype-stringify";
@@ -13,6 +14,11 @@ export async function renderMarkdown(markdown: string): Promise<string> {
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkRehype)
+    // javascript: 같은 위험 URL·속성을 제거한다(GitHub 기본 스키마, 코드 블록의 language-* class 허용).
+    // 기본 스키마는 id 에 user-content- 접두사를 붙이므로, 제목 id 는 sanitize 뒤에 rehypeSlug 로 만든다.
+    // 하이라이트가 만드는 span/style 도 sanitize 에 지워지지 않도록 하이라이트보다 앞에 둔다.
+    // remark-rehype 가 각주 id 에 이미 user-content- 를 붙이므로 sanitize 가 한 번 더 붙이지 않게 접두사를 끈다.
+    .use(rehypeSanitize, { ...defaultSchema, clobberPrefix: "" })
     // 목차 앵커용 heading id. extractToc 와 같은 github-slugger 를 쓴다.
     .use(rehypeSlug)
     .use(rehypePrettyCode, { theme: "github-dark" })
