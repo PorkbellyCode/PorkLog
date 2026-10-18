@@ -5,8 +5,11 @@ import SkillBadge from "@/components/skill-badge";
 import TocRail from "@/components/toc-rail";
 import type { TocItem } from "@/lib/toc";
 
-// 오른쪽 목차 레일: 프로젝트 섹션(id=slug)만 나열한다.
-const TOC: TocItem[] = sideProjects.map((p) => ({ depth: 2, text: p.name, id: p.slug }));
+// 오른쪽 목차 레일: 맨 위(개요)와 프로젝트 섹션(id=slug)을 나열한다.
+const TOC: TocItem[] = [
+  { depth: 2, text: "개요", id: "overview" },
+  ...sideProjects.map((p): TocItem => ({ depth: 2, text: p.name, id: p.slug })),
+];
 
 const DESCRIPTION =
   "사이드 프로젝트 PorkLog, WorkWrap, CRDD의 핵심 기능과 기술 결정.";
@@ -180,7 +183,7 @@ export default function PortfolioPage() {
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-10">
-        <h1 className="font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-4xl">
+        <h1 id="overview" className="scroll-mt-20 font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-4xl">
           Portfolio
         </h1>
 

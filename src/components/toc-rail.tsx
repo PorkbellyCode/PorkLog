@@ -42,7 +42,7 @@ export default function TocRail({ items }: { items: TocItem[] }) {
   if (items.length < 2) return null;
 
   return (
-    <div className="group fixed right-2 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
+    <div className="group fixed right-2 top-1/2 z-30 hidden -translate-y-1/2 xl:block print:hidden">
       {/* 접힌 상태: 짧은 가로 눈금들 */}
       <ul className="flex flex-col items-end gap-1.5 group-hover:invisible group-focus-within:invisible">
         {items.map((item) => {
