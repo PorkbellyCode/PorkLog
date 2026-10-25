@@ -89,3 +89,14 @@ export function excludeSeenLinks<T extends { link: string }>(items: T[], seen: I
   const seenSet = new Set(seen);
   return items.filter((item) => !seenSet.has(normalizeLink(item.link)));
 }
+
+// 정규화한 링크가 같은 항목은 먼저 나온 것만 남긴다(HN·Lobsters 가 같은 원문을 가리킬 때).
+export function dedupeByLink<T extends { link: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = normalizeLink(item.link);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}

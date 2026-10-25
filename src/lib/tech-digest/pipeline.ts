@@ -1,6 +1,7 @@
-import { excludeSeenLinks } from "./filters";
+import { dedupeByLink, excludeSeenLinks } from "./filters";
 import { composeDigest, MIN_ITEMS } from "./compose";
 import { fetchWeeklyTechNews } from "./fetch-feeds";
+import { fetchHackerNews, fetchLobsters } from "./fetch-community";
 import { fetchGithubTrending } from "./fetch-github";
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
@@ -18,11 +19,13 @@ export type BuildResult =
 // seenLinks: 지난 글에 이미 나온 링크(정규화됨). dry-run 에서는 빈 배열을 넘긴다.
 export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Date()): Promise<BuildResult> {
   const startedAt = Date.now();
-  const [feedsResult, githubResult, hfResult, openRouterResult] = await Promise.allSettled([
+  const [feedsResult, githubResult, hfResult, openRouterResult, hnResult, lobstersResult] = await Promise.allSettled([
     fetchWeeklyTechNews(),
     fetchGithubTrending(),
     fetchTrendingModels(),
     fetchOpenRouterTrending(),
+    fetchHackerNews(),
+    fetchLobsters(),
   ]);
 
   const failedSources: string[] = [];
@@ -38,8 +41,10 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
   const repos = settle(githubResult, "GitHub 트렌딩", [] as DigestItem[]);
   const hfModels = settle(hfResult, "Hugging Face", []);
   const openRouterModels = settle(openRouterResult, "OpenRouter", []);
+  const hnItems = settle(hnResult, "Hacker News", [] as DigestItem[]);
+  const lobstersItems = settle(lobstersResult, "Lobsters", [] as DigestItem[]);
 
-  const pool = excludeSeenLinks([...feeds.items, ...repos], seenLinks);
+  const pool = excludeSeenLinks(dedupeByLink([...feeds.items, ...repos, ...hnItems, ...lobstersItems]), seenLinks);
   if (pool.length === 0) return { status: "skipped", reason: "no_items" };
   // 후보가 이 수보다 적으면 LLM 이 골라도 발행 기준에 못 미치므로 호출하지 않는다.
   if (pool.length < MIN_ITEMS) return { status: "skipped", reason: "not_enough_items" };
