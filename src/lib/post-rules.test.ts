@@ -7,16 +7,20 @@ const future = new Date(now.getTime() + 60_000);
 const future2 = new Date(now.getTime() + 120_000);
 
 describe("resolvePublishedAt", () => {
-  test("이미 발행된 글은 publishedAt을 미래로 바꿔도 무시된다", () => {
-    expect(resolvePublishedAt(past, future, now)).toBe(past);
+  const pub = (publishedAt: Date, isPrivate = false) => ({ isPrivate, publishedAt });
+
+  test("이미 공개된 글은 publishedAt을 미래로 바꿔도 무시된다", () => {
+    const current = pub(past);
+    expect(resolvePublishedAt(current, future, now)).toBe(current.publishedAt);
   });
 
   test("아직 발행 전(미래 publishedAt)인 글은 예약 시각을 다시 조정할 수 있다", () => {
-    expect(resolvePublishedAt(future, future2, now)).toBe(future2);
+    expect(resolvePublishedAt(pub(future), future2, now)).toBe(future2);
   });
 
-  test("발행 시각이 정확히 now와 같으면 이미 발행된 것으로 본다", () => {
-    expect(resolvePublishedAt(new Date(now), future, now)).toEqual(now);
+  test("발행 시각이 정확히 now와 같은 공개 글은 고정된다", () => {
+    const current = pub(new Date(now));
+    expect(resolvePublishedAt(current, future, now)).toBe(current.publishedAt);
   });
 
   test("기존 글을 찾지 못하면 입력값을 쓴다", () => {
@@ -24,7 +28,15 @@ describe("resolvePublishedAt", () => {
   });
 
   test("생략해 즉시 발행(입력이 현재 시각)인 발행 전 글은 입력값으로 바뀐다", () => {
-    expect(resolvePublishedAt(future, now, now)).toBe(now);
+    expect(resolvePublishedAt(pub(future), now, now)).toBe(now);
+  });
+
+  test("비공개 초안은 과거 발행일이어도 입력값을 쓴다(초안을 예약으로 바꿀 수 있음)", () => {
+    expect(resolvePublishedAt(pub(past, true), future, now)).toBe(future);
+  });
+
+  test("공개했다가 비공개로 돌린 글도 발행일을 다시 바꿀 수 있다(의도된 동작)", () => {
+    expect(resolvePublishedAt(pub(past, true), future2, now)).toBe(future2);
   });
 });
 

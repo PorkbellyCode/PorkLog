@@ -26,11 +26,11 @@ export async function GET() {
       title: posts.title,
       content: posts.content,
       category: posts.category,
-      createdAt: posts.createdAt,
+      publishedAt: posts.publishedAt,
     })
     .from(posts)
     .where(publicPostsCondition())
-    .orderBy(desc(posts.createdAt))
+    .orderBy(desc(posts.publishedAt), desc(posts.id))
     .limit(FEED_SIZE);
 
   const items = rows
@@ -42,12 +42,12 @@ export async function GET() {
       <guid isPermaLink="true">${url}</guid>
       <description>${escapeXml(extractPreview(p.content, 200))}</description>
       <category>${escapeXml(p.category)}</category>
-      <pubDate>${p.createdAt.toUTCString()}</pubDate>
+      <pubDate>${p.publishedAt.toUTCString()}</pubDate>
     </item>`;
     })
     .join("\n");
 
-  const lastBuildDate = (rows[0]?.createdAt ?? new Date()).toUTCString();
+  const lastBuildDate = (rows[0]?.publishedAt ?? new Date()).toUTCString();
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">

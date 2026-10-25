@@ -227,13 +227,12 @@ async function PostList({
       thumbnail: posts.thumbnail,
       tags: posts.tags,
       viewCount: posts.viewCount,
-      createdAt: posts.createdAt,
       isPrivate: posts.isPrivate,
       publishedAt: posts.publishedAt,
     })
     .from(posts)
     .where(whereClause)
-    .orderBy(desc(posts.createdAt))
+    .orderBy(desc(posts.publishedAt), desc(posts.id))
     .limit(PAGE_SIZE)
     .offset(offset);
 
