@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  dedupeByLink,
   excludeSeenLinks,
   extractLinks,
   isCandidateRepo,
@@ -119,5 +120,16 @@ describe("지난 글 링크 제외", () => {
   test("이미 나온 링크의 후보는 제외한다", () => {
     const items = [{ link: "https://nextjs.org/blog/x?utm_medium=y" }, { link: "https://new.example/post" }];
     expect(excludeSeenLinks(items, ["https://nextjs.org/blog/x"])).toEqual([items[1]]);
+  });
+});
+
+describe("dedupeByLink", () => {
+  test("정규화 후 같은 링크는 앞의 것만 남긴다", () => {
+    const items = [
+      { link: "https://a.test/post/?utm_source=hn", id: 1 },
+      { link: "https://A.test/post#top", id: 2 },
+      { link: "https://b.test/x", id: 3 },
+    ];
+    expect(dedupeByLink(items).map((i) => i.id)).toEqual([1, 3]);
   });
 });

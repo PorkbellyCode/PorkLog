@@ -6,10 +6,10 @@ import { BODY_LIMIT, type DigestItem } from "./types";
 
 export type { DigestItem };
 
-type FeedConfig = {
+export type FeedConfig = {
   name: string;
   url: string;
-  kind: "article" | "release";
+  kind: "article" | "release" | "community";
   // 소스당 최대 항목 수(릴리스는 항상 1개).
   limit: number;
   // 있으면 이 카테고리 중 하나를 가진 항목만 쓴다.
@@ -55,7 +55,7 @@ const LOOKBACK_DAYS = 7;
 // 피드 본문이 이보다 짧으면 링크를 열어 본문을 가져온다.
 const SHORT_BODY = 300;
 
-const parser = new XMLParser({
+export const parser = new XMLParser({
   ignoreAttributes: false,
   cdataPropName: "__cdata",
   processEntities: true,
@@ -178,14 +178,26 @@ async function fetchFeed(feed: FeedConfig): Promise<DigestItem[]> {
     .slice(0, feed.limit);
 }
 
-// 피드 본문이 짧은 글은 링크를 열어 본문을 보충한다. 실패하면 짧은 본문 그대로 둔다.
-async function enrichShortBodies(items: DigestItem[]): Promise<DigestItem[]> {
+// 커뮤니티 항목은 보충 후에도 본문이 이보다 짧으면 쓰지 않는다(제목만으로 글을 쓰게 하지 않는다).
+export const MIN_COMMUNITY_BODY = 200;
+
+// 응답이 HTML 인가. PDF 등은 본문 추출이 의미 없으므로 보충하지 않는다.
+export function isHtmlContentType(contentType: string | null): boolean {
+  return contentType !== null && contentType.toLowerCase().includes("text/html");
+}
+
+export function hasEnoughCommunityBody(item: { body: string }): boolean {
+  return item.body.length >= MIN_COMMUNITY_BODY;
+}
+
+// 피드 본문이 짧은 글·커뮤니티 항목은 링크를 열어 본문을 보충한다. 실패하면 짧은 본문 그대로 둔다.
+export async function enrichShortBodies(items: DigestItem[]): Promise<DigestItem[]> {
   return Promise.all(
     items.map(async (item) => {
-      if (item.kind !== "article" || item.body.length >= SHORT_BODY) return item;
+      if ((item.kind !== "article" && item.kind !== "community") || item.body.length >= SHORT_BODY) return item;
       try {
         const res = await fetchWithTimeout(item.link, { headers: { "User-Agent": USER_AGENT } });
-        if (!res.ok) return item;
+        if (!res.ok || !isHtmlContentType(res.headers.get("content-type"))) return item;
         const text = extractArticleText(await res.text());
         return text.length > item.body.length ? { ...item, body: text.slice(0, BODY_LIMIT) } : item;
       } catch {
