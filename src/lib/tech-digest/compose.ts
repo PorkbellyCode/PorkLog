@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SITE_URL } from "@/lib/site";
 import { hasExcludedKeyword } from "./filters";
 import type { Candidate } from "./types";
 import type { TrendingModel as HfModel } from "./fetch-huggingface";
@@ -9,6 +10,8 @@ export const MIN_ITEMS = 3;
 // 지난주 토큰이 이보다 적은 모델은 증가율이 큰 의미가 없어 표에서 뺀다.
 export const MIN_LAST_WEEK_TOKENS = 5_000_000_000;
 const TABLE_SIZE = 5;
+// 큐레이션 글의 고정 썸네일. 썸네일 스키마가 절대 URL 만 허용해서 SITE_URL 을 붙인다.
+export const DIGEST_THUMBNAIL = `${SITE_URL}/tech-news.webp`;
 
 // ── LLM 출력 검증 ─────────────────────────────────────
 

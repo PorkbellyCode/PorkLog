@@ -4,6 +4,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { postInputSchema } from "@/lib/post-schema";
+import { DIGEST_THUMBNAIL } from "./compose";
 import { extractLinks } from "./filters";
 import { kstDateString } from "./kst";
 
@@ -56,7 +57,7 @@ export async function createDigestPost(
     slug,
     content: post.content,
     category: "dev",
-    thumbnail: null,
+    thumbnail: DIGEST_THUMBNAIL,
     series: DIGEST_SERIES,
     tags: [DIGEST_TAG],
     isPrivate: false,

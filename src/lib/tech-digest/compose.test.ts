@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
+import { postInputSchema } from "@/lib/post-schema";
 import {
   buildTitle,
+  DIGEST_THUMBNAIL,
   composeDigest,
   filterOpenRouterModels,
   findBannedPhrases,
@@ -146,5 +148,12 @@ describe("조립", () => {
       bannedLeft: [],
     });
     expect(content.match(/<!--/g)).toHaveLength(1); // 관리자 메모의 것뿐
+  });
+});
+
+describe("DIGEST_THUMBNAIL", () => {
+  test("썸네일 스키마 검증을 통과한다", () => {
+    const result = postInputSchema.shape.thumbnail.safeParse(DIGEST_THUMBNAIL);
+    expect(result.success).toBe(true);
   });
 });
