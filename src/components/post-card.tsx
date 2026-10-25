@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { formatKstDate, formatKstShortDateTime } from "@/lib/date";
 import { categoryLabel, defaultThumbnail } from "@/lib/categories";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
@@ -16,7 +17,6 @@ type PostCardProps = {
     thumbnail: string | null;
     tags: string[];
     viewCount: number;
-    createdAt: Date;
     isPrivate: boolean;
     publishedAt: Date;
   };
@@ -88,12 +88,7 @@ export default function PostCard({
             {isAdmin && isScheduled && (
               <Badge variant="outline">
                 예약{" "}
-                {post.publishedAt.toLocaleString("ko-KR", {
-                  month: "numeric",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatKstShortDateTime(post.publishedAt)}
               </Badge>
             )}
           </div>
@@ -124,7 +119,7 @@ export default function PostCard({
           {/* 날짜 줄: 좌측 날짜 + 우측 액션 버튼 (mt-auto 로 카드 하단 고정) */}
           <div className="mt-auto flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 text-xs text-fg-muted">
-              <time>{post.createdAt.toLocaleDateString("ko-KR")}</time>
+              <time>{formatKstDate(post.publishedAt)}</time>
               <span
                 className="inline-flex items-center gap-1"
                 title={`조회 ${post.viewCount.toLocaleString("ko-KR")}`}

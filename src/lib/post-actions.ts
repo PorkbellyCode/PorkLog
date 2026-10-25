@@ -137,6 +137,7 @@ export async function updatePost(
       series: posts.series,
       seriesOrder: posts.seriesOrder,
       publishedAt: posts.publishedAt,
+      isPrivate: posts.isPrivate,
     })
     .from(posts)
     .where(eq(posts.id, id));
@@ -145,7 +146,7 @@ export async function updatePost(
   const order = resolveSeriesOrder(current, series);
   const seriesOrder = order === "next" ? await getNextSeriesOrder(series!) : order;
 
-  const effectivePublishedAt = resolvePublishedAt(current?.publishedAt, publishedAt, new Date());
+  const effectivePublishedAt = resolvePublishedAt(current, publishedAt, new Date());
 
   await db
     .update(posts)

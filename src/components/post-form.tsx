@@ -13,6 +13,8 @@ import {
 import { MAX_TAGS, MAX_TAG_LENGTH } from "@/lib/post-schema";
 import MarkdownEditor from "@/components/markdown-editor";
 import { CATEGORIES } from "@/lib/categories";
+import { isPubliclyVisible } from "@/lib/post-visibility";
+import { fromKstDatetimeLocal, toKstDatetimeLocal } from "@/lib/date";
 
 type PostFormProps = {
   post?: {
@@ -29,18 +31,12 @@ type PostFormProps = {
   };
 };
 
-// datetime-local input 은 "YYYY-MM-DDTHH:mm" (로컬 타임존, 초 단위 없음) 형식을 요구한다.
-function toDatetimeLocalValue(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 export default function PostForm({ post }: PostFormProps) {
   const router = useRouter();
   const isEdit = post !== undefined;
-  // 이미 발행 시각이 지난(=한 번이라도 공개됐던) 글은 서버에서 발행일시 변경을 무시하므로,
+  // 지금 공개 상태인 글은 서버에서 발행일시 변경을 무시하므로,
   // 폼에서도 미리 비활성화해서 안 바뀌는 값을 바꾼 것처럼 보이지 않게 한다.
-  const alreadyPublished = isEdit && post.publishedAt <= new Date();
+  const alreadyPublished = isEdit && isPubliclyVisible(post);
 
   const [title, setTitle] = useState(post?.title ?? "");
   const [slug, setSlug] = useState(post?.slug ?? "");
@@ -53,7 +49,7 @@ export default function PostForm({ post }: PostFormProps) {
   const [tags, setTags] = useState<string[]>(post?.tags ?? []);
   const [isPrivate, setIsPrivate] = useState(post?.isPrivate ?? false);
   const [publishedAt, setPublishedAt] = useState(
-    toDatetimeLocalValue(post?.publishedAt ?? new Date()),
+    toKstDatetimeLocal(post?.publishedAt ?? new Date()),
   );
   const [tagInput, setTagInput] = useState("");
   const [tagError, setTagError] = useState<string | null>(null);
@@ -156,7 +152,7 @@ export default function PostForm({ post }: PostFormProps) {
         series: series.trim() || null,
         tags,
         isPrivate,
-        publishedAt: new Date(publishedAt),
+        publishedAt: fromKstDatetimeLocal(publishedAt),
       };
       const result = isEdit
         ? await updatePost(post.id, payload)
@@ -305,7 +301,7 @@ export default function PostForm({ post }: PostFormProps) {
       {/* 공개 설정: 발행일시(미래로 지정하면 예약발행) + 비공개 여부 */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-1">
-          <label className="block text-sm font-medium text-fg-default">발행일시</label>
+          <label className="block text-sm font-medium text-fg-default">발행일시 (KST)</label>
           <input
             type="datetime-local"
             value={publishedAt}
@@ -328,7 +324,18 @@ export default function PostForm({ post }: PostFormProps) {
             <input
               type="checkbox"
               checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
+              onChange={(e) => {
+                const next = e.target.checked;
+                setIsPrivate(next);
+                // 비공개 초안을 공개로 돌릴 때 과거 날짜가 발행일로 굳지 않도록 현재 시각으로 맞춘다.
+                if (
+                  !next &&
+                  !alreadyPublished &&
+                  fromKstDatetimeLocal(publishedAt) < new Date()
+                ) {
+                  setPublishedAt(toKstDatetimeLocal(new Date()));
+                }
+              }}
               className="h-4 w-4 rounded border-border-default"
             />
             비공개 (관리자만 열람 가능)

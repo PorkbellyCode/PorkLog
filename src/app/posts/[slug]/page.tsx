@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import { db } from "@/db";
 import { posts } from "@/db/schema";
-import { and, eq, sql, lt, gt, desc, asc } from "drizzle-orm";
+import { and, eq, sql, desc, asc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { renderMarkdown } from "@/lib/markdown";
@@ -18,6 +18,7 @@ import PostNav from "@/components/post-nav";
 import SeriesNav from "@/components/series-nav";
 import DeletePostButton from "@/components/delete-post-button";
 import ShareButton from "@/components/share-button";
+import { formatKstDate } from "@/lib/date";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -37,27 +38,33 @@ async function incrementViewCount(slug: string) {
     .where(eq(posts.slug, slug));
 }
 
-// 작성일 기준 인접 글. prev = 더 오래된 글, next = 더 최신 글.
-async function getNeighbors(createdAt: Date, isAdmin: boolean) {
+// 발행일 기준 인접 글. prev = 더 오래된 글, next = 더 최신 글. 발행일이 같으면 id 로 가른다.
+// DB timestamp 는 마이크로초, JS Date 는 밀리초라 JS 값과 비교하면 자기 자신이 걸린다.
+// 그래서 현재 글의 (발행일, id)를 SQL 안에서 직접 가져와 비교한다.
+async function getNeighbors(postId: number, isAdmin: boolean) {
   const visible = isAdmin ? undefined : publicPostsCondition();
+  // 서브쿼리의 posts 는 바깥 posts 를 가리고, 안쪽 참조는 모두 서브쿼리 행으로 풀린다.
+  const curKey = sql`(select ${posts.publishedAt}, ${posts.id} from ${posts} where ${posts.id} = ${postId})`;
+  const key = sql`(${posts.publishedAt}, ${posts.id})`;
+
   const [prev] = await db
     .select({ slug: posts.slug, title: posts.title })
     .from(posts)
-    .where(and(lt(posts.createdAt, createdAt), visible))
-    .orderBy(desc(posts.createdAt))
+    .where(and(sql`${key} < ${curKey}`, visible))
+    .orderBy(desc(posts.publishedAt), desc(posts.id))
     .limit(1);
 
   const [next] = await db
     .select({ slug: posts.slug, title: posts.title })
     .from(posts)
-    .where(and(gt(posts.createdAt, createdAt), visible))
-    .orderBy(asc(posts.createdAt))
+    .where(and(sql`${key} > ${curKey}`, visible))
+    .orderBy(asc(posts.publishedAt), asc(posts.id))
     .limit(1);
 
   return { prev: prev ?? null, next: next ?? null };
 }
 
-// 같은 시리즈의 글을 회차 순으로. 회차가 비어 있으면 작성일 순으로 밀린다.
+// 같은 시리즈의 글을 회차 순으로. 회차가 비어 있으면 발행일 순으로 밀린다.
 async function getSeriesEntries(series: string, isAdmin: boolean) {
   return db
     .select({ slug: posts.slug, title: posts.title })
@@ -65,7 +72,7 @@ async function getSeriesEntries(series: string, isAdmin: boolean) {
     .where(
       and(eq(posts.series, series), isAdmin ? undefined : publicPostsCondition()),
     )
-    .orderBy(asc(posts.seriesOrder), asc(posts.createdAt));
+    .orderBy(asc(posts.seriesOrder), asc(posts.publishedAt));
 }
 
 export async function generateMetadata({
@@ -112,7 +119,7 @@ export default async function PostPage({
 
   const html = await renderMarkdown(post.content);
   const toc = extractToc(post.content);
-  const { prev, next } = await getNeighbors(post.createdAt, isAdmin);
+  const { prev, next } = await getNeighbors(post.id, isAdmin);
   const seriesEntries = post.series ? await getSeriesEntries(post.series, isAdmin) : [];
 
   return (
@@ -124,7 +131,7 @@ export default async function PostPage({
             <p className="flex items-center gap-2 text-base text-fg-muted">
               <span>
                 {categoryLabel(post.category)} ·{" "}
-                {post.createdAt.toLocaleDateString("ko-KR")}
+                {formatKstDate(post.publishedAt)}
               </span>
               <span className="inline-flex items-center gap-1" title="조회수">
                 {/* Octicon: eye */}
