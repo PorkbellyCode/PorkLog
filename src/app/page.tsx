@@ -131,7 +131,7 @@ export default async function Home({
         )}
 
         <nav className="flex items-center justify-between gap-4 border-b border-border-default pb-2">
-          <div className="flex gap-4 overflow-x-auto">
+          <div className="-my-1.5 flex pr-8 sm:pr-0 gap-4 overflow-x-auto [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:[mask-image:none]">
             {tabs.map((tab) => {
               const isActive = activeCategory === tab.key;
               const href = hrefForCategory(tab.key);
@@ -141,8 +141,8 @@ export default async function Home({
                   href={href}
                   className={
                     isActive
-                      ? "text-sm font-semibold text-fg-default border-b-2 border-fg-default pb-1 whitespace-nowrap"
-                      : "text-sm text-fg-muted hover:text-fg-default pb-1 whitespace-nowrap"
+                      ? "text-sm font-semibold text-fg-default border-b-2 border-fg-default py-1.5 whitespace-nowrap"
+                      : "text-sm text-fg-muted hover:text-fg-default py-1.5 whitespace-nowrap"
                   }
                 >
                   {tab.label}
