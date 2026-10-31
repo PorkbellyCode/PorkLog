@@ -6,11 +6,16 @@ import type { Project } from "@/lib/projects";
 import SkillBadge from "@/components/skill-badge";
 
 export default function ProjectAccordion({ projects }: { projects: Project[] }) {
+  // 기본 펼침: 대표 프로젝트(KPMG). 데이터 순서와 무관하게 org 로 찾고, 없으면 첫 항목.
+  const featuredIndex = Math.max(
+    0,
+    projects.findIndex((p) => p.org.startsWith("KPMG")),
+  );
   return (
     <Accordion.Root
       type="single"
       collapsible
-      defaultValue="project-0"
+      defaultValue={`project-${featuredIndex}`}
       className="divide-y divide-border-default overflow-hidden rounded-lg border border-border-default"
     >
       {projects.map((project, i) => (
@@ -18,7 +23,7 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
           <Accordion.Header>
             <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-subtle">
               <span className="min-w-0">
-                <span className="text-sm font-semibold text-fg-default">{project.name}</span>
+                <span className="text-base font-semibold text-fg-default">{project.name}</span>
                 <span className="ml-2 text-xs text-fg-muted">{project.org}</span>
               </span>
               <svg
@@ -58,7 +63,7 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
             {/* 주요 업무 */}
             {project.tasks.length > 0 && (
               <div className="mt-4">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">주요 업무</p>
+                <p className="mb-1.5 text-base font-semibold text-fg-default">주요 업무</p>
                 <ul className="list-disc space-y-1 pl-5">
                   {project.tasks.map((task, j) => (
                     <li key={j} className="text-sm text-fg-default">
@@ -72,7 +77,7 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
             {/* 사용 기술 */}
             {project.tech.length > 0 && (
               <div className="mt-4">
-                <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-fg-muted">사용 기술</p>
+                <p className="mb-1.5 text-base font-semibold text-fg-default">사용 기술</p>
                 <div className="flex flex-wrap gap-1.5">
                   {project.tech.map((t) => (
                     <SkillBadge key={t} name={t} />

@@ -6,7 +6,7 @@ export default function SkillStack() {
     <div className="space-y-5">
       {skillCategories.map((group) => (
         <div key={group.category} className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-fg-default">
+          <p className="text-base font-semibold text-fg-default">
             {group.category}
           </p>
           <div className="space-y-1.5">
