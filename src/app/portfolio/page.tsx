@@ -34,7 +34,7 @@ function Status({ status }: { status: SideProject["status"] }) {
     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border-default px-2.5 py-0.5 text-xs text-fg-default">
       <span
         aria-hidden="true"
-        className={`h-1.5 w-1.5 rounded-full ${status.state === "live" ? "bg-[#1a7f37] dark:bg-[#3fb950]" : "bg-[#9a6700] dark:bg-[#d29922]"}`}
+        className={`h-1.5 w-1.5 rounded-full ${status.state === "live" ? "bg-chart-2" : "bg-chart-3"}`}
       />
       {status.label}
     </span>
