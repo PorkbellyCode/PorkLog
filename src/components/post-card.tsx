@@ -98,7 +98,7 @@ export default function PostCard({
             <h2
               className={
                 "font-semibold text-fg-default group-hover:text-accent-fg transition-colors " +
-                (featured ? "font-display text-2xl md:text-3xl" : "text-base")
+                (featured ? "font-display text-xl md:text-2xl" : "text-base")
               }
             >
               {post.title}

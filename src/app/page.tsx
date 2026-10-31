@@ -80,20 +80,19 @@ export default async function Home({
         {!isSearching && !activeTag && !activeCategory && currentPage === 1 && (
           <section>
             <h1 className="font-display text-2xl font-bold leading-tight tracking-tight text-fg-default sm:text-3xl">
-              보이는 것 이상을
-              <br />
-              <span className="text-accent-brand">생각하는</span> 개발자
+              김형준 · 프론트엔드 중심 풀스택 개발자
             </h1>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-fg-muted">
-              프론트엔드를 중심으로, 화면 너머의 동작까지 책임지는 풀스택 개발자입니다.
+            <p className="mt-2 text-base text-fg-default">
+              보이는 것 이상을 <span className="font-semibold text-accent-brand">생각하는</span> 개발자
             </p>
-            {/* Portfolio·Resume·GitHub·이메일을 같은 형식의 텍스트 링크로 한 줄에 둔다.
-              * Portfolio·Resume 만 액센트 + semibold 로 두어 주 액션임을 드러낸다(헤더 순서와 같다).
-              * 이미 오렌지라 hover 는 색이 아니라 밑줄로 준다. */}
+            <p className="mt-1 max-w-xl text-sm leading-relaxed text-fg-muted">
+              2023년부터 프로소프트에서 풀스택 개발자로 일하며, 사이드 프로젝트로 PorkLog·WorkWrap·CRDD를 만들고 있습니다.
+            </p>
+            {/* Portfolio·Resume 는 테두리 버튼(주 액션, 헤더 순서와 같다), GitHub·이메일은 muted 텍스트 링크(보조). */}
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
               <Link
                 href="/portfolio"
-                className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-fg transition-all hover:underline hover:underline-offset-4"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border-default px-3 py-1.5 text-sm font-semibold text-fg-default transition-colors hover:border-accent-fg hover:bg-bg-subtle hover:text-accent-fg"
               >
                 {/* Octicon: browser */}
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" className="shrink-0">
@@ -103,7 +102,7 @@ export default async function Home({
               </Link>
               <Link
                 href="/resume"
-                className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold text-accent-fg transition-all hover:underline hover:underline-offset-4"
+                className="inline-flex items-center gap-1.5 rounded-md border border-border-default px-3 py-1.5 text-sm font-semibold text-fg-default transition-colors hover:border-accent-fg hover:bg-bg-subtle hover:text-accent-fg"
               >
                 {/* Octicon: briefcase */}
                 <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true" className="shrink-0">
