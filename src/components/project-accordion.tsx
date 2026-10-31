@@ -19,7 +19,7 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
       className="divide-y divide-border-default overflow-hidden rounded-lg border border-border-default"
     >
       {projects.map((project, i) => (
-        <Accordion.Item key={i} value={`project-${i}`} className="bg-bg-default">
+        <Accordion.Item key={i} value={`project-${i}`} className="bg-bg-default print:break-inside-avoid">
           <Accordion.Header>
             <Accordion.Trigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-bg-subtle">
               <span className="min-w-0">
@@ -56,7 +56,7 @@ export default function ProjectAccordion({ projects }: { projects: Project[] }) 
             </div>
 
             {/* 개요 */}
-            <p className="mt-3 rounded-md bg-bg-subtle px-3 py-2 text-sm text-fg-default">
+            <p className="mt-3 rounded-md bg-bg-subtle px-3 py-2 text-sm text-fg-default print:border print:border-border-default">
               {project.summary}
             </p>
 

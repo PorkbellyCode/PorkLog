@@ -204,6 +204,11 @@ kbd {
     break-inside: avoid;
   }
 
+  /* 프로젝트 섹션은 길어서 통째로 avoid 하면 앞에 빈 페이지가 생긴다. 항목(아코디언) 단위로만 유지. */
+  section:has(> #projects) {
+    break-inside: auto;
+  }
+
   @page {
     margin: 12mm;
   }
