@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { sideProjects, type Decision, type SideProject } from "@/lib/projects";
 import ProjectGallery from "@/components/project-gallery";
 import SkillBadge from "@/components/skill-badge";
@@ -83,7 +84,7 @@ function DecisionItem({ decision }: { decision: Decision }) {
       <h4 className="font-display text-sm font-semibold leading-snug text-fg-default">{decision.title}</h4>
       <dl className="space-y-3 text-sm leading-relaxed">
         {rows.map((r) => (
-          <div key={r.label} className="grid grid-cols-[3rem_1fr] gap-3">
+          <div key={r.label} className="grid gap-1 sm:grid-cols-[3rem_1fr] sm:gap-3">
             <dt className={`pt-px font-mono text-xs ${r.strong ? "font-semibold text-accent-fg" : "text-fg-muted"}`}>
               {r.label}
             </dt>
@@ -109,7 +110,7 @@ function SectionLabel({ children }: { children: string }) {
 
 function ProjectSection({ p }: { p: SideProject }) {
   return (
-    <section id={p.slug} aria-labelledby={`${p.slug}-title`} className="scroll-mt-20 space-y-10 py-14 first:pt-0 last:pb-0">
+    <section id={p.slug} aria-labelledby={`${p.slug}-title`} className="scroll-mt-20 space-y-8 py-10 first:pt-0 last:pb-0">
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <h2 id={`${p.slug}-title`} className="font-display text-xl font-bold tracking-tight text-fg-default">
@@ -183,9 +184,20 @@ export default function PortfolioPage() {
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-10">
-        <h1 id="overview" className="scroll-mt-20 font-display text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-fg-default">
-          Portfolio
-        </h1>
+        <header className="space-y-4">
+          <h1 id="overview" className="scroll-mt-20 font-display text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-fg-default">
+            Portfolio
+          </h1>
+          <p className="max-w-2xl text-base leading-relaxed text-fg-muted">
+            사이드 프로젝트 PorkLog, WorkWrap, CRDD의 핵심 기능과 기술 결정.
+          </p>
+          <Link
+            href="/resume"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border-default px-3 py-1.5 text-sm font-semibold text-fg-default transition-colors hover:border-accent-fg hover:bg-bg-subtle hover:text-accent-fg"
+          >
+            Resume 보기
+          </Link>
+        </header>
 
         <Overview />
 
