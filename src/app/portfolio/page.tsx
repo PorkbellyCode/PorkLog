@@ -52,7 +52,7 @@ function Overview() {
               className="group block space-y-1 py-3.5 transition-colors hover:bg-bg-subtle sm:px-2"
             >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="font-display text-xl font-bold tracking-tight text-fg-default transition-colors group-hover:text-accent-fg">
+                <span className="font-display text-lg font-semibold tracking-tight text-fg-default transition-colors group-hover:text-accent-fg">
                   {p.name}
                 </span>
                 <Status status={p.status} />
@@ -80,7 +80,7 @@ function DecisionItem({ decision }: { decision: Decision }) {
 
   return (
     <article className="grid gap-3 py-6 sm:grid-cols-[13rem_1fr] sm:gap-8">
-      <h4 className="font-display text-lg font-semibold leading-snug text-fg-default">{decision.title}</h4>
+      <h4 className="font-display text-sm font-semibold leading-snug text-fg-default">{decision.title}</h4>
       <dl className="space-y-3 text-sm leading-relaxed">
         {rows.map((r) => (
           <div key={r.label} className="grid grid-cols-[3rem_1fr] gap-3">
@@ -104,7 +104,7 @@ function ExternalIcon() {
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <h3 className="text-sm font-semibold text-fg-muted">{children}</h3>;
+  return <h3 className="text-base font-semibold text-fg-default">{children}</h3>;
 }
 
 function ProjectSection({ p }: { p: SideProject }) {
@@ -112,7 +112,7 @@ function ProjectSection({ p }: { p: SideProject }) {
     <section id={p.slug} aria-labelledby={`${p.slug}-title`} className="scroll-mt-20 space-y-10 py-14 first:pt-0 last:pb-0">
       <header className="space-y-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <h2 id={`${p.slug}-title`} className="font-display text-3xl font-bold tracking-tight text-fg-default sm:text-4xl">
+          <h2 id={`${p.slug}-title`} className="font-display text-xl font-bold tracking-tight text-fg-default">
             {p.name}
           </h2>
           <Status status={p.status} />
@@ -120,7 +120,7 @@ function ProjectSection({ p }: { p: SideProject }) {
         <p className="font-mono text-xs text-fg-muted">
           {p.period} · {p.asOf}
         </p>
-        <p className="max-w-2xl text-lg leading-relaxed text-fg-default">{p.tagline}</p>
+        <p className="max-w-2xl text-base leading-relaxed text-fg-muted">{p.tagline}</p>
 
         {p.access && (
           <p className="max-w-2xl border-l-2 border-border-default pl-4 text-sm leading-relaxed text-fg-muted">
@@ -183,7 +183,7 @@ export default function PortfolioPage() {
   return (
     <main className="px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-5xl space-y-10">
-        <h1 id="overview" className="scroll-mt-20 font-display text-3xl font-bold leading-tight tracking-tight text-fg-default sm:text-4xl">
+        <h1 id="overview" className="scroll-mt-20 font-display text-2xl sm:text-3xl font-bold leading-tight tracking-tight text-fg-default">
           Portfolio
         </h1>
 
