@@ -57,6 +57,22 @@ export const projects: Project[] = [
     links: [],
   },
   {
+    name: "LogisPro WMS 개발 · 고도화",
+    period: "2023.07 ~ 현재",
+    org: "프로소프트 (자사 솔루션)",
+    summary: "물류센터의 입출고·재고 관리를 실시간 데이터 기반으로 전환하는 자사 창고관리 솔루션(WMS) 개발 및 고도화·안정화",
+    role: "풀스택 개발",
+    tasks: [
+      "선행 개발분을 이어받아 화면 개발 및 유지보수",
+      "코어 영역 성능 개선",
+      "KonaFramework 기반 솔루션으로서, 고도화된 KonaFramework 업데이트를 LogisPro에 적용",
+      "MariaDB·Oracle 두 가지 DB 버전 대응",
+    ],
+    tech: ["Vue.js", "TypeScript", "Java", "Spring Boot", "MariaDB", "Oracle"],
+    images: [],
+    links: [{ label: "제품 소개", url: "https://www.pro-soft.co.kr/product/logis-pro-wms" }],
+  },
+  {
     name: "KonaFramework 개발 · 고도화",
     period: "2024.03 ~ 현재",
     org: "프로소프트 (자사)",
