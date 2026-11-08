@@ -82,6 +82,7 @@ export function parseLlmOutput(text: string, candidates: Pick<Candidate, "id" | 
 // ── 금지 표현 ─────────────────────────────────────────
 
 const BANNED: (string | RegExp)[] = [
+  "내 작업에",
   "인상적",
   "흐름으로 읽힌다",
   "주목할 만",

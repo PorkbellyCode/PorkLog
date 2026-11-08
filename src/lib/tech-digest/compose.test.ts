@@ -85,6 +85,11 @@ describe("findBannedPhrases", () => {
     });
     expect(found).toEqual(expect.arrayContaining(["강력한", "!", "이는 큰 변화를 보여줍니다", "🚀"]));
   });
+  test("항목마다 반복되던 '내 작업에' 표현을 찾는다", () => {
+    expect(findBannedPhrases({ ...base, items: [{ ...item(1), body: body + " 그래서 내 작업에는 영향이 큽니다." }] })).toEqual([
+      "내 작업에",
+    ]);
+  });
   test("레포·스택 본문의 금지 표현도 찾는다", () => {
     const found = findBannedPhrases({
       ...base,

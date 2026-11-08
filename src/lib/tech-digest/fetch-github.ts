@@ -112,10 +112,23 @@ export function parseGithubRepoLink(link: string): string | null {
   }
 }
 
+// 레포 메인 페이지 링크인가. issues·pull·releases 등 레포 안의 특정 페이지는 아니다.
+export function isRepoRootLink(link: string): boolean {
+  if (!parseGithubRepoLink(link)) return false;
+  return new URL(link).pathname.split("/").filter(Boolean).length === 2;
+}
+
 // HN·Lobsters 에서 화제가 된 GitHub 레포를 레포 후보로 만든다. 새로 생긴 레포만 잡는 검색 API 를 보완한다.
-// 같은 링크의 커뮤니티 항목은 파이프라인의 링크 중복 제거에서 레포 후보 쪽이 남는다.
+// 레포 메인 링크만 옮긴다. 이슈·PR·릴리스 링크는 그 사건 자체가 화제이므로 커뮤니티 글(이슈 후보)로 둔다.
 export async function fetchCommunityRepos(items: DigestItem[]): Promise<DigestItem[]> {
-  const names = [...new Set(items.map((i) => parseGithubRepoLink(i.link)).filter((n): n is string => n !== null))];
+  const names = [
+    ...new Set(
+      items
+        .filter((i) => isRepoRootLink(i.link))
+        .map((i) => parseGithubRepoLink(i.link))
+        .filter((n): n is string => n !== null),
+    ),
+  ];
   const results = await Promise.allSettled(
     names.map(async (name) => {
       const res = await fetchWithTimeout(`https://api.github.com/repos/${name}`, { headers: githubHeaders() });

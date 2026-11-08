@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseGithubRepoLink, readmeToText, toRepoItem } from "./fetch-github";
+import { isRepoRootLink, parseGithubRepoLink, readmeToText, toRepoItem } from "./fetch-github";
 
 describe("parseGithubRepoLink", () => {
   test.each([
@@ -18,6 +18,20 @@ describe("parseGithubRepoLink", () => {
     "not a url",
   ])("레포 링크가 아니면 null: %s", (link) => {
     expect(parseGithubRepoLink(link)).toBeNull();
+  });
+});
+
+describe("isRepoRootLink", () => {
+  test("레포 메인 링크만 true", () => {
+    expect(isRepoRootLink("https://github.com/govijr/terminal-mac")).toBe(true);
+    expect(isRepoRootLink("https://github.com/govijr/terminal-mac/")).toBe(true);
+  });
+  test("이슈·PR·릴리스·파일 링크는 false", () => {
+    expect(isRepoRootLink("https://github.com/anthropics/claude-code/issues/12345")).toBe(false);
+    expect(isRepoRootLink("https://github.com/vercel/next.js/pull/1")).toBe(false);
+    expect(isRepoRootLink("https://github.com/ghostty-org/ghostty/releases/tag/v1.4.0")).toBe(false);
+    expect(isRepoRootLink("https://github.com/a/b/blob/main/README.md")).toBe(false);
+    expect(isRepoRootLink("https://example.com/a/b")).toBe(false);
   });
 });
 

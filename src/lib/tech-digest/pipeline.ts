@@ -2,7 +2,7 @@ import { dedupeByLink, excludeSeenLinks } from "./filters";
 import { composeDigest, MIN_ITEMS, type ParsedOutput } from "./compose";
 import { fetchWeeklyTechNews } from "./fetch-feeds";
 import { fetchGeekNews, fetchHackerNews, fetchLobsters } from "./fetch-community";
-import { fetchCommunityRepos, fetchGithubTrending, parseGithubRepoLink } from "./fetch-github";
+import { fetchCommunityRepos, fetchGithubTrending, isRepoRootLink, parseGithubRepoLink } from "./fetch-github";
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
 import { fetchStackCandidates, stackMentionedIn } from "./fetch-stack";
@@ -52,7 +52,8 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
 
   // 레포 후보로 옮긴 커뮤니티 글은 이슈 후보에서 뺀다(같은 레포가 두 섹션에 나오지 않게).
   const repoNames = new Set(communityRepos.map((r) => parseGithubRepoLink(r.link)?.toLowerCase()));
-  const notMovedToRepos = (item: DigestItem) => !repoNames.has(parseGithubRepoLink(item.link)?.toLowerCase());
+  const notMovedToRepos = (item: DigestItem) =>
+    !(isRepoRootLink(item.link) && repoNames.has(parseGithubRepoLink(item.link)?.toLowerCase()));
 
   const collected = [
     ...feeds.items,
