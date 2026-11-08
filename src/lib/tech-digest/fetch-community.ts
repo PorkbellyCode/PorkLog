@@ -7,6 +7,8 @@ import {
   type FeedConfig,
 } from "./fetch-feeds";
 import { fetchWithTimeout, USER_AGENT } from "./http";
+import { kstDateString } from "./kst";
+import { htmlToText } from "./text";
 import type { DigestItem } from "./types";
 
 const HN_API = "https://hn.algolia.com/api/v1/search";
@@ -31,7 +33,7 @@ export type HnHit = {
   created_at: string;
 };
 
-const COMMUNITY_HOSTS = ["news.ycombinator.com", "lobste.rs"];
+const COMMUNITY_HOSTS = ["news.ycombinator.com", "lobste.rs", "news.hada.io"];
 
 // 출처 표기. compose.ts 가 `원문: [source](link)` 로 쓰므로 source 가 링크 대상과 일치해야 한다.
 export function communitySource(link: string, communityName: string): string {
@@ -121,5 +123,89 @@ export async function fetchLobsters(): Promise<DigestItem[]> {
       isLobstersOwnLink(item.link) ? item : (await enrichShortBodies([item]))[0],
     ),
   );
+  return enriched.filter(hasEnoughCommunityBody);
+}
+
+// ── GeekNews ─────────────────────────────────────────
+// RSS 에는 점수가 없어 화제성을 알 수 없다. 날짜별 "지난 소식" 페이지(past?day=)에 points 가 있어 그것을 읽는다.
+// HTML 구조가 바뀌면 파싱 결과가 비므로, 그때는 실패로 보고 다른 소스만으로 진행한다.
+
+const GEEKNEWS_BASE = "https://news.hada.io";
+const GEEKNEWS_LIMIT = 10;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export type GeekNewsTopic = {
+  id: string;
+  title: string;
+  desc: string;
+  points: number;
+  comments: number;
+  publishedAt: Date;
+};
+
+// 크론은 일요일 새벽에 돈다. 그날 페이지는 거의 비어 있으므로 어제부터 7일 치를 본다.
+export function geekNewsDayUrls(now: Date): string[] {
+  return Array.from({ length: LOOKBACK_DAYS }, (_, i) => {
+    const day = kstDateString(new Date(now.getTime() - (i + 1) * DAY_MS));
+    return `${GEEKNEWS_BASE}/past?day=${day}`;
+  });
+}
+
+export function parseGeekNewsPage(html: string): GeekNewsTopic[] {
+  return html
+    .split("<div class='topic_row'")
+    .slice(1)
+    .flatMap((row) => {
+      const id = row.match(/data-topic-state-id='(\d+)'/)?.[1];
+      const title = row.match(/<h2 class='topic-title-heading'>([\s\S]*?)<\/h2>/)?.[1];
+      const points = row.match(/<span id='tp\d+'>(\d+)<\/span>/)?.[1];
+      if (!id || !title || !points) return [];
+      const desc = row.match(/<div class='topicdesc'><a[^>]*>([\s\S]*?)<\/a>/)?.[1] ?? "";
+      const comments = row.match(/data-topic-comment-count='(\d+)'/)?.[1] ?? "0";
+      const datetime = row.match(/datetime="([^"]+)"/)?.[1] ?? "";
+      return [
+        {
+          id,
+          title: htmlToText(title),
+          desc: htmlToText(desc).replace(/\.{3}$/, "").trim(),
+          points: Number(points),
+          comments: Number(comments),
+          publishedAt: new Date(datetime),
+        },
+      ];
+    });
+}
+
+export function toGeekNewsItems(topics: GeekNewsTopic[], limit = GEEKNEWS_LIMIT): DigestItem[] {
+  const unique = [...new Map(topics.map((t) => [t.id, t])).values()];
+  return unique
+    .filter((t) => !hasExcludedKeyword(t.title))
+    .sort((a, b) => b.points - a.points)
+    .slice(0, limit)
+    .map((t) => ({
+      kind: "community" as const,
+      source: "GeekNews",
+      title: `${t.title} (GeekNews ${t.points}점, 댓글 ${t.comments})`,
+      link: `${GEEKNEWS_BASE}/topic?id=${t.id}`,
+      body: t.desc,
+      pubDate: t.publishedAt,
+      categories: [],
+    }));
+}
+
+export async function fetchGeekNews(now: Date = new Date()): Promise<DigestItem[]> {
+  const pages = await Promise.allSettled(
+    geekNewsDayUrls(now).map(async (url) => {
+      const res = await fetchWithTimeout(url, { headers: { "User-Agent": USER_AGENT } });
+      if (!res.ok) throw new Error(`GeekNews 요청 실패: HTTP ${res.status} ${url}`);
+      return parseGeekNewsPage(await res.text());
+    }),
+  );
+  const topics = pages.flatMap((p) => (p.status === "fulfilled" ? p.value : []));
+  if (topics.length === 0) {
+    throw new Error("GeekNews 에서 읽은 글이 없습니다(요청 실패 또는 HTML 구조 변경).");
+  }
+  // 목록의 요약은 잘려 있다. 토픽 페이지를 열어 GeekNews 요약 전문으로 보충한다.
+  const enriched = await enrichShortBodies(toGeekNewsItems(topics));
   return enriched.filter(hasEnoughCommunityBody);
 }

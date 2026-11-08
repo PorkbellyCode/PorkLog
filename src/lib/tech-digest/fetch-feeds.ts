@@ -12,6 +12,7 @@ export type FeedConfig = {
   kind: "article" | "release" | "community";
   // 소스당 최대 항목 수(릴리스는 항상 1개).
   limit: number;
+  linkIncludes?: string; // 링크에 이 문자열이 있는 글만 쓴다(기술 글과 보도자료가 한 피드에 섞인 경우)
   // 있으면 이 카테고리 중 하나를 가진 항목만 쓴다.
   categoryAllow?: string[];
 };
@@ -44,6 +45,18 @@ const FEEDS: FeedConfig[] = [
   article("Anthony Fu", "https://antfu.me/feed.xml"),
   article("Vercel 블로그", "https://vercel.com/atom"),
   article("Cloudflare 블로그", "https://blog.cloudflare.com/rss/"),
+  // 한국 기업 기술블로그. 우아한형제들·컬리는 서버 요청을 403 으로 막고, 카카오페이 RSS 는 비어 있어 뺐다.
+  article("토스 기술블로그", "https://toss.tech/rss.xml"),
+  article("카카오 기술블로그", "https://tech.kakao.com/feed"),
+  article("네이버 D2", "https://d2.naver.com/d2.atom"),
+  article("LY 기술블로그", "https://techblog.lycorp.co.jp/ko/feed/index.xml"),
+  article("당근 테크블로그", "https://medium.com/feed/daangn"),
+  article("뱅크샐러드 기술블로그", "https://corp.banksalad.com/blog/rss.xml", { linkIncludes: "/blog/tech/" }),
+  article("데브시스터즈 기술블로그", "https://tech.devsisters.com/rss.xml"),
+  article("NHN Cloud Meetup", "https://meetup.nhncloud.com/rss"),
+  article("무신사 테크블로그", "https://medium.com/feed/musinsa-tech"),
+  article("여기어때 기술블로그", "https://techblog.gccompany.co.kr/feed"),
+  article("하이퍼커넥트 기술블로그", "https://hyperconnect.github.io/feed.xml"),
   release("vercel/next.js"),
   release("facebook/react"),
   release("microsoft/TypeScript"),
@@ -174,6 +187,7 @@ async function fetchFeed(feed: FeedConfig): Promise<DigestItem[]> {
 
   return recent
     .filter((item) => matchesCategoryAllowList(item.categories, feed.categoryAllow))
+    .filter((item) => !feed.linkIncludes || item.link.includes(feed.linkIncludes))
     .sort((a, b) => b.pubDate.getTime() - a.pubDate.getTime())
     .slice(0, feed.limit);
 }

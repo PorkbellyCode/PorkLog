@@ -46,7 +46,7 @@ export function matchesCategoryAllowList(categories: string[], allow: string[] |
 
 // ── GitHub 레포 / 모델 ────────────────────────────────
 
-const EXCLUDED_KEYWORDS = /nsfw|uncensored|abliterat|jailbreak|\bcrack(ed)?\b|keygen|\bcheats?\b|emulator|porn|hentai|erotic|\bleaked?\b/i;
+const EXCLUDED_KEYWORDS = /nsfw|uncensored|abliterat|jailbreak|\bcrack(ed)?\b|keygen|\bcheats?\b|emulator|porn|hentai|erotic|\bleaked?\b|undress|nudify|deepfake/i;
 
 export function hasExcludedKeyword(text: string): boolean {
   return EXCLUDED_KEYWORDS.test(text);

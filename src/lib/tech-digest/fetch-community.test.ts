@@ -1,5 +1,16 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { buildHnUrl, communitySource, isLobstersOwnLink, toHnItems, toLobstersItems, type HnHit } from "./fetch-community";
+import {
+  buildHnUrl,
+  communitySource,
+  geekNewsDayUrls,
+  isLobstersOwnLink,
+  parseGeekNewsPage,
+  toGeekNewsItems,
+  toHnItems,
+  toLobstersItems,
+  type GeekNewsTopic,
+  type HnHit,
+} from "./fetch-community";
 import { enrichShortBodies, hasEnoughCommunityBody, isHtmlContentType, parseRss, parser } from "./fetch-feeds";
 
 const hit = (over: Partial<HnHit>): HnHit => ({
@@ -119,5 +130,67 @@ describe("본문 보충 판정", () => {
   test("커뮤니티 항목은 본문 200자 이상이어야 한다", () => {
     expect(hasEnoughCommunityBody({ body: "a".repeat(199) })).toBe(false);
     expect(hasEnoughCommunityBody({ body: "a".repeat(200) })).toBe(true);
+  });
+});
+
+// news.hada.io/past?day= 페이지의 실제 행 구조(2026-11 기준)를 줄인 것.
+const gnRow = (id: number, title: string, points: number, comments: number) =>
+  `<div class='topic_row' data-topic-state-id='${id}' data-topic-voteable='1'><div class=votenum>1</div>` +
+  `<div class=topictitle><span id='dead${id}'></span><a href='topic?id=${id}' rel='nofollow' class='topic-title-link'>` +
+  `<h2 class='topic-title-heading'>${title}</h2></a> <span class=topicurl>(example.com)</span></div>` +
+  `<div class='topicdesc'><a href='topic?id=${id}' class='c99 breakall'>요약 &amp; 설명 ...</a></div>` +
+  `<div class='topicinfo'><span id='tp${id}'>${points}</span> points by <a href='/@u'>u</a> ` +
+  `<time class="js-relative-time" datetime="2026-11-06T08:50:07+09:00" data-date="2026-11-06">2일전</time>` +
+  `<span id='unvote${id}'></span> | <a href='topic?id=${id}&go=comments' class=u data-topic-comment-topic-id='${id}' data-topic-comment-count='${comments}'>댓글 ${comments}개</a></div></div>`;
+
+describe("parseGeekNewsPage", () => {
+  test("행마다 id·제목·요약·점수·댓글 수·작성 시각을 읽는다", () => {
+    const html = `<div class="topics">${gnRow(36657, "Discord, Electron을 버리고 Rust로", 13, 11)}${gnRow(36680, "Show GN: 하네스 &amp; eBook", 18, 2)}</div>`;
+    const topics = parseGeekNewsPage(html);
+    expect(topics).toHaveLength(2);
+    expect(topics[0]).toEqual({
+      id: "36657",
+      title: "Discord, Electron을 버리고 Rust로",
+      desc: "요약 & 설명",
+      points: 13,
+      comments: 11,
+      publishedAt: new Date("2026-11-06T08:50:07+09:00"),
+    });
+    expect(topics[1].title).toBe("Show GN: 하네스 & eBook");
+  });
+
+  test("구조가 바뀌어 필요한 값이 없으면 빈 배열", () => {
+    expect(parseGeekNewsPage("<div class='topic_row'><h3>다른 구조</h3></div>")).toEqual([]);
+  });
+});
+
+describe("toGeekNewsItems", () => {
+  const topic = (id: string, points: number, title = `글 ${id}`): GeekNewsTopic => ({
+    id,
+    title,
+    desc: "요약",
+    points,
+    comments: 1,
+    publishedAt: new Date("2026-11-06T00:00:00Z"),
+  });
+
+  test("같은 글은 한 번만, 점수 내림차순으로 limit 개", () => {
+    const items = toGeekNewsItems([topic("1", 5), topic("2", 20), topic("1", 5), topic("3", 9)], 2);
+    expect(items.map((i) => i.link)).toEqual(["https://news.hada.io/topic?id=2", "https://news.hada.io/topic?id=3"]);
+    expect(items[0]).toMatchObject({ kind: "community", source: "GeekNews", title: "글 2 (GeekNews 20점, 댓글 1)" });
+  });
+
+  test("제외 키워드가 있는 제목은 뺀다", () => {
+    expect(toGeekNewsItems([topic("1", 50, "uncensored 모델 공개")])).toEqual([]);
+  });
+});
+
+describe("geekNewsDayUrls", () => {
+  test("KST 기준 어제부터 7일 치 날짜 페이지", () => {
+    // 2026-11-08 01:00 KST (토요일 16:00 UTC 크론)
+    const urls = geekNewsDayUrls(new Date("2026-11-07T16:00:00Z"));
+    expect(urls).toHaveLength(7);
+    expect(urls[0]).toBe("https://news.hada.io/past?day=2026-11-07");
+    expect(urls[6]).toBe("https://news.hada.io/past?day=2026-11-01");
   });
 });

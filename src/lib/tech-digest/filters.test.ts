@@ -102,6 +102,8 @@ describe("isCandidateRepo", () => {
   });
   test("제외 키워드 제외", () => {
     expect(isCandidateRepo({ ...base, description: "uncensored chat model with no limits" })).toBe(false);
+    expect(isCandidateRepo({ fullName: "x/undress-service", description: "AI service" })).toBe(false);
+    expect(isCandidateRepo({ ...base, description: "nudify any photo" })).toBe(false);
     expect(isCandidateRepo({ ...base, fullName: "a/nsfw-gen" })).toBe(false);
     expect(isCandidateRepo({ ...base, description: "Game emulator ported to the browser" })).toBe(false);
   });
