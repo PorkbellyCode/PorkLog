@@ -2,7 +2,7 @@ import { dedupeByLink, excludeSeenLinks } from "./filters";
 import { composeDigest, MIN_ITEMS } from "./compose";
 import { fetchWeeklyTechNews } from "./fetch-feeds";
 import { fetchGeekNews, fetchHackerNews, fetchLobsters } from "./fetch-community";
-import { fetchGithubTrending } from "./fetch-github";
+import { fetchCommunityRepos, fetchGithubTrending, parseGithubRepoLink } from "./fetch-github";
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
 import { nextMondayNineKst } from "./kst";
@@ -46,7 +46,24 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
   const lobstersItems = settle(lobstersResult, "Lobsters", [] as DigestItem[]);
   const geekNewsItems = settle(geekNewsResult, "GeekNews", [] as DigestItem[]);
 
-  const pool = excludeSeenLinks(dedupeByLink([...feeds.items, ...repos, ...hnItems, ...lobstersItems, ...geekNewsItems]), seenLinks);
+  // 개별 레포 조회 실패는 fetchCommunityRepos 안에서 걸러지므로 여기서는 던지지 않는다.
+  const communityRepos = await fetchCommunityRepos([...hnItems, ...lobstersItems]);
+
+  // 레포 후보로 옮긴 커뮤니티 글은 이슈 후보에서 뺀다(같은 레포가 두 섹션에 나오지 않게).
+  const repoNames = new Set(communityRepos.map((r) => parseGithubRepoLink(r.link)?.toLowerCase()));
+  const notMovedToRepos = (item: DigestItem) => !repoNames.has(parseGithubRepoLink(item.link)?.toLowerCase());
+
+  const pool = excludeSeenLinks(
+    dedupeByLink([
+      ...feeds.items,
+      ...repos,
+      ...communityRepos,
+      ...hnItems.filter(notMovedToRepos),
+      ...lobstersItems.filter(notMovedToRepos),
+      ...geekNewsItems,
+    ]),
+    seenLinks,
+  );
   if (pool.length === 0) return { status: "skipped", reason: "no_items" };
   // 후보가 이 수보다 적으면 LLM 이 골라도 발행 기준에 못 미치므로 호출하지 않는다.
   if (pool.length < MIN_ITEMS) return { status: "skipped", reason: "not_enough_items" };
