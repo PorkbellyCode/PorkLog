@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildStackBody, findMentionedStacks, pickHnStories } from "./fetch-stack";
+import { buildStackBody, findMentionedStacks, pickHnStories, stackMentionedIn } from "./fetch-stack";
 
 const item = (title: string, body = "") => ({ title, body });
 
@@ -77,5 +77,16 @@ describe("pickHnStories", () => {
       { aliases: ["Electron"] },
     );
     expect(stories).toEqual([{ title: "Electron is flash for the desktop", points: 500, year: 2017 }]);
+  });
+});
+
+describe("stackMentionedIn", () => {
+  test("고른 항목에 별칭이 단어로 나오면 true", () => {
+    expect(stackMentionedIn("Electron", [item("Discord, Electron을 버리고 Rust로")])).toBe(true);
+    expect(stackMentionedIn("PostgreSQL", [item("글", "Postgres 인덱스 튜닝")])).toBe(true);
+  });
+  test("나오지 않거나 목록에 없는 스택이면 false", () => {
+    expect(stackMentionedIn("React", [item("Firefox 의 rel=next prefetch", "Reactive 하게")])).toBe(false);
+    expect(stackMentionedIn("Unknown", [item("Unknown")])).toBe(false);
   });
 });

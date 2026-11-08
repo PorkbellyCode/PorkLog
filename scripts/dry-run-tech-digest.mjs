@@ -15,6 +15,19 @@ if (built.status === "skipped") {
 }
 
 console.log(`후보 ${built.stats.candidates}개 중 ${built.stats.selected}개 선택`);
+
+// 어떤 후보가 들어왔는데 안 골렸는지 보려고 소스별 후보 목록을 출력한다.
+const bySource = new Map();
+for (const c of built.candidates) {
+  const key = `${c.kind} · ${c.source}`;
+  bySource.set(key, [...(bySource.get(key) ?? []), `[${c.id}] ${c.title}`]);
+}
+console.log("\n──────── 후보 ────────");
+for (const [key, titles] of bySource) {
+  console.log(`\n${key} (${titles.length})`);
+  for (const t of titles) console.log(`  ${t}`);
+}
+console.log("");
 console.log(`제목: ${built.post.title}`);
 console.log(`공개 예정: ${built.post.publishedAt.toISOString()}`);
 

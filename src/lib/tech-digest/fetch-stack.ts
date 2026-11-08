@@ -72,6 +72,14 @@ export function findMentionedStacks(
 
 const repoUrl = (stack: Stack) => `https://github.com/${stack.repo}`;
 
+// LLM 이 고른 스택이 실제로 고른 이슈·레포에 이름이 나오는지. 아니면 코드가 스택을 버린다.
+export function stackMentionedIn(stackName: string, items: Pick<DigestItem, "title" | "body">[]): boolean {
+  const stack = STACKS.find((s) => s.name === stackName);
+  if (!stack) return false;
+  const text = items.map((i) => `${i.title}\n${i.body}`).join("\n");
+  return stack.aliases.some((alias) => mentionCount(text, alias) > 0);
+}
+
 export type HnStory = { title: string; points: number; year: number };
 
 // 소개 재료. 수치·연도·일화는 여기 적힌 것만 쓰도록 프롬프트가 제한한다.

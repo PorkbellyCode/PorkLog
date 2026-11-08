@@ -1,11 +1,11 @@
 import { dedupeByLink, excludeSeenLinks } from "./filters";
-import { composeDigest, MIN_ITEMS } from "./compose";
+import { composeDigest, MIN_ITEMS, type ParsedOutput } from "./compose";
 import { fetchWeeklyTechNews } from "./fetch-feeds";
 import { fetchGeekNews, fetchHackerNews, fetchLobsters } from "./fetch-community";
 import { fetchCommunityRepos, fetchGithubTrending, parseGithubRepoLink } from "./fetch-github";
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
-import { fetchStackCandidates } from "./fetch-stack";
+import { fetchStackCandidates, stackMentionedIn } from "./fetch-stack";
 import { nextMondayNineKst } from "./kst";
 import { summarizeCandidates } from "./summarize";
 import type { Candidate, DigestItem } from "./types";
@@ -13,7 +13,7 @@ import type { Candidate, DigestItem } from "./types";
 export type BuiltDigest = { title: string; content: string; publishedAt: Date };
 
 export type BuildResult =
-  | { status: "built"; post: BuiltDigest; stats: { candidates: number; selected: number } }
+  | { status: "built"; post: BuiltDigest; stats: { candidates: number; selected: number }; candidates: Candidate[] }
   | { status: "skipped"; reason: "no_items" | "not_enough_items" };
 
 // 수집 → 후보 정리 → LLM 1회 → 조립. DB 를 읽지도 쓰지도 않는다.
@@ -80,7 +80,7 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
     body,
   }));
 
-  const summary = await summarizeCandidates(candidates, startedAt);
+  const summary = dropUnrelatedStack(await summarizeCandidates(candidates, startedAt), candidates);
   if (summary.items.length < MIN_ITEMS) return { status: "skipped", reason: "not_enough_items" };
 
   const publishedAt = nextMondayNineKst(now);
@@ -97,5 +97,20 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
     status: "built",
     post: { title, content, publishedAt },
     stats: { candidates: candidates.length, selected: summary.items.length },
+    candidates,
   };
+}
+
+// 스택은 고른 이슈·레포에 이름이 직접 나올 때만 쓴다. 프롬프트로 요구하지만 어기는 경우가 있어 코드로 확인한다.
+function dropUnrelatedStack<T extends Pick<ParsedOutput, "items" | "repos" | "stack" | "droppedIds">>(
+  summary: T,
+  candidates: Candidate[],
+): T {
+  if (!summary.stack) return summary;
+  const byId = new Map(candidates.map((c) => [c.id, c]));
+  const stackSource = byId.get(summary.stack.id)?.source ?? "";
+  const picked = [...summary.items, ...summary.repos].flatMap((i) => byId.get(i.id) ?? []);
+  if (stackMentionedIn(stackSource, picked)) return summary;
+  console.warn(`고른 이슈·레포에 ${stackSource} 이(가) 나오지 않아 스택을 뺍니다.`);
+  return { ...summary, stack: null, droppedIds: [...summary.droppedIds, summary.stack.id] };
 }

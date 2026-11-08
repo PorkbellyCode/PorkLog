@@ -202,7 +202,7 @@ export function composeDigest(params: {
   const memo = renderMemo([
     ...picked.map((i) => `선택 [${byId.get(i.id)?.source}] ${i.title}: ${i.reason || "이유 없음"}`),
     `후보 ${candidates.length}개 중 이슈 ${output.items.length}개, 레포 ${output.repos.length}개, 스택 ${output.stack ? 1 : 0}개 선택, ${candidates.length - picked.length}개 제외`,
-    output.droppedIds.length > 0 ? `버린 id(후보에 없음/중복): ${output.droppedIds.join(", ")}` : "",
+    output.droppedIds.length > 0 ? `버린 id(후보에 없음/종류 불일치/중복/관련 없는 스택): ${output.droppedIds.join(", ")}` : "",
     params.failedSources.length > 0 ? `수집 실패 소스: ${params.failedSources.join(", ")}` : "",
     params.bannedLeft.length > 0 ? `금지 표현 잔존(재시도 후에도): ${params.bannedLeft.join(", ")}` : "",
   ]);
