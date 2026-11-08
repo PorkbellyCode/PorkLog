@@ -10,7 +10,7 @@ const FETCH_SIZE = 30;
 const POOL_SIZE = 5;
 const LOOKBACK_DAYS = 7;
 
-type GithubSearchItem = {
+export type GithubSearchItem = {
   full_name: string;
   html_url: string;
   description: string | null;
@@ -24,7 +24,7 @@ type GithubSearchResponse = { items: GithubSearchItem[] };
 
 const REPO_BODY_LIMIT = 1500;
 
-function githubHeaders(): HeadersInit {
+export function githubHeaders(): HeadersInit {
   const headers: HeadersInit = { Accept: "application/vnd.github+json" };
   const token = process.env.GITHUB_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -86,7 +86,7 @@ export function readmeToText(markdown: string): string {
 }
 
 // README 를 못 읽어도 레포 후보는 버리지 않는다(설명만으로 판단하게 둔다).
-async function fetchReadmeText(fullName: string): Promise<string> {
+export async function fetchReadmeText(fullName: string): Promise<string> {
   try {
     const res = await fetchWithTimeout(`https://api.github.com/repos/${fullName}/readme`, {
       headers: { ...githubHeaders(), Accept: "application/vnd.github.raw" },

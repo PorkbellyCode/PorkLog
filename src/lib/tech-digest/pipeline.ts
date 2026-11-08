@@ -5,6 +5,7 @@ import { fetchGeekNews, fetchHackerNews, fetchLobsters } from "./fetch-community
 import { fetchCommunityRepos, fetchGithubTrending, parseGithubRepoLink } from "./fetch-github";
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
+import { fetchStackCandidates } from "./fetch-stack";
 import { nextMondayNineKst } from "./kst";
 import { summarizeCandidates } from "./summarize";
 import type { Candidate, DigestItem } from "./types";
@@ -53,17 +54,19 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
   const repoNames = new Set(communityRepos.map((r) => parseGithubRepoLink(r.link)?.toLowerCase()));
   const notMovedToRepos = (item: DigestItem) => !repoNames.has(parseGithubRepoLink(item.link)?.toLowerCase());
 
-  const pool = excludeSeenLinks(
-    dedupeByLink([
-      ...feeds.items,
-      ...repos,
-      ...communityRepos,
-      ...hnItems.filter(notMovedToRepos),
-      ...lobstersItems.filter(notMovedToRepos),
-      ...geekNewsItems,
-    ]),
-    seenLinks,
-  );
+  const collected = [
+    ...feeds.items,
+    ...repos,
+    ...communityRepos,
+    ...hnItems.filter(notMovedToRepos),
+    ...lobstersItems.filter(notMovedToRepos),
+    ...geekNewsItems,
+  ];
+  const fresh = excludeSeenLinks(dedupeByLink(collected), seenLinks);
+  // 이번 주 후보 글에 이름이 나온 스택만 소개 재료를 모은다. 이슈와 관련 없으면 LLM 이 비워 둔다.
+  const stacks = await fetchStackCandidates(fresh, seenLinks);
+
+  const pool = dedupeByLink([...fresh, ...stacks]);
   if (pool.length === 0) return { status: "skipped", reason: "no_items" };
   // 후보가 이 수보다 적으면 LLM 이 골라도 발행 기준에 못 미치므로 호출하지 않는다.
   if (pool.length < MIN_ITEMS) return { status: "skipped", reason: "not_enough_items" };
