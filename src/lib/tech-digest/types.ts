@@ -1,6 +1,6 @@
-export type CandidateKind = "release" | "article" | "repo" | "community";
+export type CandidateKind = "release" | "article" | "repo" | "community" | "stack";
 
-// 수집 단계의 항목. 피드 항목·릴리스·GitHub 레포가 모두 이 모양으로 모인다.
+// 수집 단계의 항목. 피드 항목·릴리스·GitHub 레포·스택 자료가 모두 이 모양으로 모인다.
 export type DigestItem = {
   kind: CandidateKind;
   source: string;

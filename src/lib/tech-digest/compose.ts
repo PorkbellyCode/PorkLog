@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { SITE_URL } from "@/lib/site";
 import { hasExcludedKeyword } from "./filters";
-import type { Candidate } from "./types";
+import type { Candidate, CandidateKind } from "./types";
 import type { TrendingModel as HfModel } from "./fetch-huggingface";
 import type { TrendingModel as OpenRouterModel } from "./fetch-openrouter";
 
 export const MAX_ITEMS = 7;
 export const MIN_ITEMS = 3;
+export const MAX_REPOS = 3;
 // 지난주 토큰이 이보다 적은 모델은 증가율이 큰 의미가 없어 표에서 뺀다.
 export const MIN_LAST_WEEK_TOKENS = 5_000_000_000;
 const TABLE_SIZE = 5;
@@ -23,39 +24,59 @@ const llmOutputSchema = z.object({
     .max(40, "subtitle 은 40자 이내여야 합니다.")
     .refine((v) => !/[.。]$/.test(v), "subtitle 은 마침표로 끝나면 안 됩니다."),
   highlights: z.array(z.string().trim().min(1).max(120)).length(3, "highlights 는 정확히 3개여야 합니다."),
-  items: z.array(
-    z.object({
-      id: z.number().int(),
-      title: z.string().trim().min(1).max(80),
-      body: z.string().trim().min(40, "body 가 너무 짧습니다.").max(1500, "body 가 너무 깁니다."),
-      reason: z.string().trim().max(200).default(""),
-    }),
-  ),
+  items: z.array(llmItemSchema(1500)),
+  repos: z.array(llmItemSchema(1200)),
+  stack: z.array(llmItemSchema(3000)), // 0개 또는 1개. 이슈와 관련된 스택이 없으면 비운다.
 });
 
-export type LlmItem = z.infer<typeof llmOutputSchema>["items"][number];
+function llmItemSchema(maxBody: number) {
+  return z.object({
+    id: z.number().int(),
+    title: z.string().trim().min(1).max(80),
+    body: z.string().trim().min(40, "body 가 너무 짧습니다.").max(maxBody, "body 가 너무 깁니다."),
+    reason: z.string().trim().max(200).default(""),
+  });
+}
+
+export type LlmItem = z.infer<ReturnType<typeof llmItemSchema>>;
 export type ParsedOutput = {
   subtitle: string;
   highlights: string[];
-  items: LlmItem[]; // 후보에 있는 id 만, 중복 없이, 최대 MAX_ITEMS
-  droppedIds: number[]; // 후보에 없거나 중복이라 버린 id
+  items: LlmItem[]; // 이슈. 기사·릴리스·커뮤니티 후보 id 만, 최대 MAX_ITEMS
+  repos: LlmItem[]; // 화제의 레포. repo 후보 id 만, 최대 MAX_REPOS
+  stack: LlmItem | null; // 이번 주의 스택. stack 후보 id 만, 없으면 null
+  droppedIds: number[]; // 후보에 없거나, 섹션 종류와 맞지 않거나, 중복이라 버린 id
 };
 
+const ISSUE_KINDS: CandidateKind[] = ["article", "release", "community"];
+
 // JSON 문자열을 검증해 쓸 수 있는 항목만 남긴다. 형식이 틀리면 던진다.
-export function parseLlmOutput(text: string, candidateIds: Set<number>): ParsedOutput {
+export function parseLlmOutput(text: string, candidates: Pick<Candidate, "id" | "kind">[]): ParsedOutput {
   const raw = llmOutputSchema.parse(JSON.parse(text));
+  const kindById = new Map(candidates.map((c) => [c.id, c.kind]));
   const seen = new Set<number>();
-  const items: LlmItem[] = [];
   const droppedIds: number[] = [];
-  for (const item of raw.items) {
-    if (!candidateIds.has(item.id) || seen.has(item.id)) {
-      droppedIds.push(item.id);
-      continue;
-    }
-    seen.add(item.id);
-    items.push(item);
-  }
-  return { subtitle: raw.subtitle, highlights: raw.highlights, items: items.slice(0, MAX_ITEMS), droppedIds };
+
+  // 섹션마다 허용하는 후보 종류가 다르다. 섹션을 넘나드는 중복도 버린다.
+  const keep = (list: LlmItem[], kinds: CandidateKind[]) =>
+    list.filter((item) => {
+      const kind = kindById.get(item.id);
+      if (!kind || !kinds.includes(kind) || seen.has(item.id)) {
+        droppedIds.push(item.id);
+        return false;
+      }
+      seen.add(item.id);
+      return true;
+    });
+
+  return {
+    subtitle: raw.subtitle,
+    highlights: raw.highlights,
+    items: keep(raw.items, ISSUE_KINDS).slice(0, MAX_ITEMS),
+    repos: keep(raw.repos, ["repo"]).slice(0, MAX_REPOS),
+    stack: keep(raw.stack, ["stack"])[0] ?? null,
+    droppedIds,
+  };
 }
 
 // ── 금지 표현 ─────────────────────────────────────────
@@ -88,11 +109,13 @@ const BANNED: (string | RegExp)[] = [
 ];
 
 // 결과 전체에서 금지 표현을 찾아 발견된 표현 목록을 돌려준다.
-export function findBannedPhrases(output: Pick<ParsedOutput, "subtitle" | "highlights" | "items">): string[] {
+export function findBannedPhrases(
+  output: Pick<ParsedOutput, "subtitle" | "highlights" | "items" | "repos" | "stack">,
+): string[] {
   const text = [
     output.subtitle,
     ...output.highlights,
-    ...output.items.flatMap((i) => [i.title, i.body]),
+    ...[...output.items, ...output.repos, ...(output.stack ? [output.stack] : [])].flatMap((i) => [i.title, i.body]),
   ].join("\n");
   const found: string[] = [];
   for (const rule of BANNED) {
@@ -174,25 +197,34 @@ export function composeDigest(params: {
 }): { title: string; content: string } {
   const { output, candidates } = params;
   const byId = new Map(candidates.map((c) => [c.id, c]));
-  const usedIds = new Set(output.items.map((i) => i.id));
+  const picked = [...output.items, ...output.repos, ...(output.stack ? [output.stack] : [])];
 
   const memo = renderMemo([
-    ...output.items.map((i) => `선택 [${byId.get(i.id)?.source}] ${i.title}: ${i.reason || "이유 없음"}`),
-    `후보 ${candidates.length}개 중 ${output.items.length}개 선택, ${candidates.length - usedIds.size}개 제외`,
+    ...picked.map((i) => `선택 [${byId.get(i.id)?.source}] ${i.title}: ${i.reason || "이유 없음"}`),
+    `후보 ${candidates.length}개 중 이슈 ${output.items.length}개, 레포 ${output.repos.length}개, 스택 ${output.stack ? 1 : 0}개 선택, ${candidates.length - picked.length}개 제외`,
     output.droppedIds.length > 0 ? `버린 id(후보에 없음/중복): ${output.droppedIds.join(", ")}` : "",
     params.failedSources.length > 0 ? `수집 실패 소스: ${params.failedSources.join(", ")}` : "",
     params.bannedLeft.length > 0 ? `금지 표현 잔존(재시도 후에도): ${params.bannedLeft.join(", ")}` : "",
   ]);
 
-  const sections = output.items.map((item) => {
+  const renderItem = (item: LlmItem, heading: "##" | "###", linkLabel: string) => {
     const c = byId.get(item.id)!;
-    return `## ${stripCommentOpen(item.title)}\n\n${stripCommentOpen(item.body)}\n\n원문: [${c.source}](<${c.link}>)`;
-  });
+    return `${heading} ${stripCommentOpen(item.title)}\n\n${stripCommentOpen(item.body)}\n\n${linkLabel}: [${c.source}](<${c.link}>)`;
+  };
+
+  const issueSections = output.items.map((item) => renderItem(item, "##", "원문"));
+  const repoSection =
+    output.repos.length > 0
+      ? ["## 화제의 레포", ...output.repos.map((item) => renderItem(item, "###", "레포"))].join("\n\n")
+      : "";
+  const stackSection = output.stack ? `## 이번 주의 스택\n\n${renderItem(output.stack, "###", "참고")}` : "";
 
   const content = [
     memo,
     output.highlights.map((h) => `- ${stripCommentOpen(h)}`).join("\n"),
-    ...sections,
+    ...issueSections,
+    repoSection,
+    stackSection,
     renderNumbersSection(params.hfModels, params.openRouterModels),
   ]
     .filter(Boolean)
