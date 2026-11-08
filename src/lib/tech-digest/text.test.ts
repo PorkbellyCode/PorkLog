@@ -12,6 +12,10 @@ describe("truncate", () => {
     expect(truncate("a".repeat(2000)).length).toBe(1500);
     expect(truncate("abc")).toBe("abc");
   });
+
+  test("이모지(서로게이트 쌍) 중간에서 자르지 않는다", () => {
+    expect(truncate("a".repeat(1499) + "🚀")).toBe("a".repeat(1499));
+  });
 });
 
 describe("extractArticleText", () => {

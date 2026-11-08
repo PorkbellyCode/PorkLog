@@ -21,7 +21,10 @@ export function htmlToText(html: string): string {
 }
 
 export function truncate(text: string, limit = BODY_LIMIT): string {
-  return text.length <= limit ? text : text.slice(0, limit);
+  if (text.length <= limit) return text;
+  const cut = text.slice(0, limit);
+  // 이모지 등 서로게이트 쌍 중간에서 잘리면 짝 없는 서로게이트가 남아 OpenAI 가 요청 JSON 을 거부한다(400 invalid_json).
+  return /[\uD800-\uDBFF]$/.test(cut) ? cut.slice(0, -1) : cut;
 }
 
 // 페이지 HTML 에서 본문 영역을 article → main → body 순으로 찾아 평문으로 만든다.

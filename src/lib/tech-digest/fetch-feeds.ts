@@ -2,7 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 import { fetchWithTimeout, USER_AGENT } from "./http";
 import { matchesCategoryAllowList, pickLatestStableRelease } from "./filters";
 import { extractArticleText, htmlToText, truncate } from "./text";
-import { BODY_LIMIT, type DigestItem } from "./types";
+import type { DigestItem } from "./types";
 
 export type { DigestItem };
 
@@ -199,7 +199,7 @@ export async function enrichShortBodies(items: DigestItem[]): Promise<DigestItem
         const res = await fetchWithTimeout(item.link, { headers: { "User-Agent": USER_AGENT } });
         if (!res.ok || !isHtmlContentType(res.headers.get("content-type"))) return item;
         const text = extractArticleText(await res.text());
-        return text.length > item.body.length ? { ...item, body: text.slice(0, BODY_LIMIT) } : item;
+        return text.length > item.body.length ? { ...item, body: truncate(text) } : item;
       } catch {
         return item;
       }
