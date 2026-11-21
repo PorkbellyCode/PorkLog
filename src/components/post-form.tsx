@@ -12,6 +12,7 @@ import {
 } from "@/lib/post-actions";
 import { MAX_TAGS, MAX_TAG_LENGTH } from "@/lib/post-schema";
 import MarkdownEditor from "@/components/markdown-editor";
+import LeaveGuard from "@/components/leave-guard";
 import { CATEGORIES } from "@/lib/categories";
 import { isPubliclyVisible } from "@/lib/post-visibility";
 import { fromKstDatetimeLocal, toKstDatetimeLocal } from "@/lib/date";
@@ -59,6 +60,29 @@ export default function PostForm({ post }: PostFormProps) {
   const [state, setState] = useState<PostFormState>({});
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 처음 값과 비교해 하나라도 바뀌었으면 이탈 경고를 켠다.
+  const [initial] = useState({
+    title,
+    slug,
+    content,
+    category,
+    thumbnail,
+    series,
+    tags,
+    isPrivate,
+    publishedAt,
+  });
+  const isDirty =
+    title !== initial.title ||
+    slug !== initial.slug ||
+    content !== initial.content ||
+    category !== initial.category ||
+    thumbnail !== initial.thumbnail ||
+    series !== initial.series ||
+    isPrivate !== initial.isPrivate ||
+    publishedAt !== initial.publishedAt ||
+    tags.join("\n") !== initial.tags.join("\n");
 
   // 입력값 정규화 후 태그로 추가. 엔터 입력이 유일한 추가 경로다.
   function addTag() {
@@ -160,7 +184,8 @@ export default function PostForm({ post }: PostFormProps) {
 
       if (result.ok) {
         toast.success(isEdit ? "글을 수정했습니다." : "글을 작성했습니다.");
-        router.push(isEdit ? `/posts/${result.slug ?? slug}` : "/");
+        // replace: 이탈 경고용으로 쌓아 둔 history 항목을 덮어써서 뒤로가기 기록을 원래대로 유지한다.
+        router.replace(isEdit ? `/posts/${result.slug ?? slug}` : "/");
         router.refresh();
         return;
       }
@@ -176,6 +201,7 @@ export default function PostForm({ post }: PostFormProps) {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
+      <LeaveGuard when={isDirty} />
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-xl font-semibold text-fg-default">
           {isEdit ? "글 수정" : "새 글 작성"}
