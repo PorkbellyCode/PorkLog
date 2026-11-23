@@ -45,6 +45,14 @@ const FEEDS: FeedConfig[] = [
   article("Anthony Fu", "https://antfu.me/feed.xml"),
   article("Vercel 블로그", "https://vercel.com/atom"),
   article("Cloudflare 블로그", "https://blog.cloudflare.com/rss/"),
+  // 사용 중인 스택의 공식 블로그. Vue 블로그는 2024-09 이후 글이 없고 Drizzle 은 RSS 가 없어 릴리스 피드로만 본다.
+  article("Next.js 블로그", "https://nextjs.org/feed.xml"),
+  article("React 블로그", "https://react.dev/rss.xml"),
+  article("TypeScript 블로그", "https://devblogs.microsoft.com/typescript/feed/"),
+  article("Tailwind 블로그", "https://tailwindcss.com/feeds/feed.xml"),
+  article("Better Auth 블로그", "https://www.better-auth.com/blog/rss.xml"),
+  // 제품 홍보·고객 사례가 대부분이라 엔지니어링·Postgres 카테고리만 쓴다.
+  article("Neon 블로그", "https://neon.com/blog/rss.xml", { categoryAllow: ["Engineering", "Postgres"] }),
   // 한국 기업 기술블로그. 우아한형제들·컬리는 서버 요청을 403 으로 막고, 카카오페이 RSS 는 비어 있어 뺐다.
   article("토스 기술블로그", "https://toss.tech/rss.xml"),
   article("카카오 기술블로그", "https://tech.kakao.com/feed"),
@@ -62,6 +70,12 @@ const FEEDS: FeedConfig[] = [
   release("microsoft/TypeScript"),
   release("nodejs/node"),
   release("anthropics/claude-code"),
+  release("vuejs/core"),
+  release("spring-projects/spring-boot"),
+  release("tailwindlabs/tailwindcss"),
+  release("drizzle-team/drizzle-orm"),
+  release("better-auth/better-auth"),
+  release("vitest-dev/vitest"),
 ];
 
 const LOOKBACK_DAYS = 7;
