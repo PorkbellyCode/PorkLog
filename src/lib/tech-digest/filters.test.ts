@@ -34,6 +34,8 @@ describe("isStableMinorRelease", () => {
     ["TypeScript 6.0.1 RC", false],
     ["v16.5.0-rc.1", false],
     ["v16.5.0-next.3", false],
+    ["v4.2.0-RC2", false], // Spring 은 대문자 RC 뒤에 숫자가 바로 붙는다
+    ["v4.2.0-M1", false], // Spring 마일스톤
     ["v2.1.302", false], // 패치
     ["19.3.1 (October 14th, 2026)", false], // 패치
     ["vscode-typescript/v1.0.0", false], // 하위 패키지

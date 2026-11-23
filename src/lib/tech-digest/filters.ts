@@ -4,6 +4,8 @@ import type { DigestItem } from "./types";
 
 const PRERELEASE_WORD = /\b(canary|rc|beta|alpha|experimental|nightly)\b/i;
 const PRERELEASE_NEXT = /-next\b/i;
+// Spring 형식: 대문자 RC·마일스톤 M 뒤에 숫자가 바로 붙는다(v4.2.0-RC2, v4.2.0-M1).
+const PRERELEASE_SUFFIX = /-(rc|m)\d+\b/i;
 
 // 제목에서 첫 번째 x.y(.z) 버전을 뽑는다. "TypeScript 6.0" 처럼 패치가 없으면 0 으로 본다.
 export function parseReleaseVersion(title: string): { major: number; minor: number; patch: number } | null {
@@ -16,14 +18,14 @@ export function parseReleaseVersion(title: string): { major: number; minor: numb
 
 // 프리릴리스가 아니고 마이너 이상(x.y.0)인 릴리스인가.
 export function isStableMinorRelease(title: string): boolean {
-  if (PRERELEASE_WORD.test(title) || PRERELEASE_NEXT.test(title)) return false;
+  if (PRERELEASE_WORD.test(title) || PRERELEASE_NEXT.test(title) || PRERELEASE_SUFFIX.test(title)) return false;
   const version = parseReleaseVersion(title);
   return version !== null && version.patch === 0;
 }
 
 // 패치 릴리스라도 보안 수정이면 소개할 가치가 있다.
 export function isSecurityRelease(title: string, body: string): boolean {
-  if (PRERELEASE_WORD.test(title) || PRERELEASE_NEXT.test(title)) return false;
+  if (PRERELEASE_WORD.test(title) || PRERELEASE_NEXT.test(title) || PRERELEASE_SUFFIX.test(title)) return false;
   if (parseReleaseVersion(title) === null) return false;
   return /\bsecurity\b|CVE-\d{4}-\d+/i.test(`${title} ${body}`);
 }
