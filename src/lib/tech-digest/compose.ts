@@ -34,6 +34,7 @@ function llmItemSchema(maxBody: number) {
     id: z.number().int(),
     title: z.string().trim().min(1).max(80),
     body: z.string().trim().min(40, "body 가 너무 짧습니다.").max(maxBody, "body 가 너무 깁니다."),
+    note: z.string().trim().max(300, "note 가 너무 깁니다.").default(""), // 모르는 기술의 배경 설명. 필요 없으면 빈 문자열
     reason: z.string().trim().max(200).default(""),
   });
 }
@@ -116,7 +117,11 @@ export function findBannedPhrases(
   const text = [
     output.subtitle,
     ...output.highlights,
-    ...[...output.items, ...output.repos, ...(output.stack ? [output.stack] : [])].flatMap((i) => [i.title, i.body]),
+    ...[...output.items, ...output.repos, ...(output.stack ? [output.stack] : [])].flatMap((i) => [
+      i.title,
+      i.body,
+      i.note,
+    ]),
   ].join("\n");
   const found: string[] = [];
   for (const rule of BANNED) {
@@ -124,6 +129,17 @@ export function findBannedPhrases(
     if (match) found.push(match);
   }
   return found;
+}
+
+// ── 배경 설명 ─────────────────────────────────────────
+
+// 설명이 필요한 후보를 골랐는데 note 를 비워 둔 이슈의 제목 목록.
+export function findMissingNotes(
+  output: Pick<ParsedOutput, "items">,
+  candidates: Pick<Candidate, "id" | "needsNote">[],
+): string[] {
+  const needsNoteIds = new Set(candidates.filter((c) => c.needsNote).map((c) => c.id));
+  return output.items.filter((i) => needsNoteIds.has(i.id) && !i.note).map((i) => i.title);
 }
 
 // ── 숫자 표 ───────────────────────────────────────────
@@ -175,7 +191,7 @@ export function renderNumbersSection(hf: HfModel[], openRouter: OpenRouterModel[
 // ── 조립 ──────────────────────────────────────────────
 
 export function buildTitle(subtitle: string): string {
-  return `이번 주 AI 테크뉴스 - ${subtitle}`;
+  return `이번 주 테크뉴스 - ${subtitle}`;
 }
 
 // 닫히지 않은 HTML 주석이 뒤 내용을 삼키지 않도록 LLM 출력에서 주석 시작을 지운다.
@@ -210,7 +226,9 @@ export function composeDigest(params: {
 
   const renderItem = (item: LlmItem, heading: "##" | "###", linkLabel: string) => {
     const c = byId.get(item.id)!;
-    return `${heading} ${stripCommentOpen(item.title)}\n\n${stripCommentOpen(item.body)}\n\n${linkLabel}: [${c.source}](<${c.link}>)`;
+    // 배경 설명은 본문 바로 아래 인용 블록으로 둔다. 여러 줄이면 줄마다 > 를 붙여 블록이 끊기지 않게 한다.
+    const note = item.note ? `\n\n> ${stripCommentOpen(item.note).split("\n").join("\n> ")}` : "";
+    return `${heading} ${stripCommentOpen(item.title)}\n\n${stripCommentOpen(item.body)}${note}\n\n${linkLabel}: [${c.source}](<${c.link}>)`;
   };
 
   const issueSections = output.items.map((item) => renderItem(item, "##", "원문"));

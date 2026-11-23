@@ -48,7 +48,7 @@ const HN_FETCH = 10;
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // 영문·숫자에 붙어 있으면 다른 단어의 일부다(Reactive, Vitest). 한글 조사는 붙어도 된다(FastAPI로).
-function mentionCount(text: string, alias: string): number {
+export function mentionCount(text: string, alias: string): number {
   return text.match(new RegExp(`(?<![A-Za-z0-9])${escapeRegExp(alias)}(?![A-Za-z0-9])`, "g"))?.length ?? 0;
 }
 

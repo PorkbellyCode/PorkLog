@@ -6,6 +6,7 @@ import { fetchCommunityRepos, fetchGithubTrending, isRepoRootLink, parseGithubRe
 import { fetchTrendingModels } from "./fetch-huggingface";
 import { fetchOpenRouterTrending } from "./fetch-openrouter";
 import { fetchStackCandidates, stackMentionedIn } from "./fetch-stack";
+import { needsNote } from "./known-tech";
 import { nextMondayNineKst } from "./kst";
 import { summarizeCandidates } from "./summarize";
 import type { Candidate, DigestItem } from "./types";
@@ -79,6 +80,7 @@ export async function buildWeeklyDigest(seenLinks: string[], now: Date = new Dat
     title,
     link,
     body,
+    needsNote: needsNote({ kind, title }),
   }));
 
   const summary = dropUnrelatedStack(await summarizeCandidates(candidates, startedAt), candidates);

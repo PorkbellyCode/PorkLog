@@ -1,5 +1,6 @@
 import { fetchWithTimeout } from "./http";
-import { findBannedPhrases, parseLlmOutput, type ParsedOutput } from "./compose";
+import { findBannedPhrases, findMissingNotes, parseLlmOutput, type ParsedOutput } from "./compose";
+import { KNOWN_NAMES } from "./known-tech";
 import type { Candidate } from "./types";
 
 // 쓰기 모델. 이름이 틀리면 dry-run 에서 OpenAI 가 거부하며 바로 드러난다.
@@ -22,16 +23,20 @@ const ITEM_ARRAY_SCHEMA = {
       id: { type: "integer" },
       title: { type: "string" },
       body: { type: "string" },
+      note: { type: "string" },
       reason: { type: "string" },
     },
-    required: ["id", "title", "body", "reason"],
+    required: ["id", "title", "body", "note", "reason"],
     additionalProperties: false,
   },
 };
 
 function formatCandidates(candidates: Candidate[]): string {
   return candidates
-    .map((c) => `[id ${c.id}] (${c.kind}, 출처: ${c.source}) ${c.title}\n링크: ${c.link}\n본문: ${c.body || "(본문 없음)"}`)
+    .map(
+      (c) =>
+        `[id ${c.id}] (${c.kind}, 출처: ${c.source}${c.needsNote ? ", 설명 필요" : ""}) ${c.title}\n링크: ${c.link}\n본문: ${c.body || "(본문 없음)"}`,
+    )
     .join("\n\n");
 }
 
@@ -67,6 +72,13 @@ export function buildPrompt(candidates: Candidate[]): string {
 - body 구성: 한 줄 정의, 왜 만들어졌는지(자료에 있을 때만), 지금도 많이 쓰이는 이유와 핵심 아이디어, 짧은 맛보기 코드, 다른 선택지가 나은 경우.
 - 개념과 동작 방식 설명에는 일반 지식을 써도 된다. 수치, 연도, 일화, 인물 이야기는 후보 본문에 있는 것만 쓴다.
 - 첫 문단에서 이번 주 어떤 이슈·레포와 이어지는지 밝힌다.
+
+[배경 설명(note)]
+- 독자는 ${KNOWN_NAMES.join(", ")} 는 안다. 그 밖의 기술·도구·프로젝트는 처음 듣는다고 가정한다.
+- "설명 필요"가 붙은 이슈 후보도 모른다는 이유로 빼지 않는다. 고르면 note 에 이 소식을 이해하는 데 필요한 기술·도구·프로젝트·개념이 무엇인지 1~2문장으로 쓴다. "이름: 설명" 형식으로 쓴다(예: "Ghostty: macOS·Linux용 터미널 에뮬레이터로, GPU로 화면을 그려 빠르게 동작합니다.").
+- note 의 정체 설명에는 일반 지식을 써도 된다. 확실하지 않으면 후보 본문에 있는 설명만 쓰고, 본문에도 없어 무엇인지 설명할 수 없으면 그 후보를 고르지 않는다.
+- note 에 쓴 설명을 body 에서 반복하지 않는다. body 는 지금처럼 소식부터 시작한다.
+- "설명 필요"가 없는 이슈와 레포·스택은 note 를 빈 문자열로 둔다.
 
 [문체]
 - 평가어 대신 사실만 쓴다. "좋다", "강력하다" 대신 무엇이 어떻게 달라졌는지 쓴다.
@@ -200,10 +212,17 @@ export async function summarizeCandidates(candidates: Candidate[], startedAt: nu
     }
 
     const bannedLeft = findBannedPhrases(parsed);
+    const missingNotes = findMissingNotes(parsed, candidates);
     best = { ...parsed, bannedLeft };
-    if (bannedLeft.length === 0) break;
-    console.warn(`재시도 사유: 금지 표현 ${bannedLeft.join(", ")}`);
-    feedback = `\n\n[수정 요청] 직전 출력에서 금지 표현이 발견됐다: ${bannedLeft.join(", ")}\n이 표현을 쓰지 않고 같은 내용으로 다시 작성하라.`;
+    if (bannedLeft.length === 0 && missingNotes.length === 0) break;
+    const requests = [
+      bannedLeft.length > 0 ? `금지 표현이 발견됐다: ${bannedLeft.join(", ")}. 이 표현을 쓰지 않는다.` : "",
+      missingNotes.length > 0
+        ? `"설명 필요" 후보인데 note 가 비어 있다: ${missingNotes.join(", ")}. note 에 무엇인지 설명을 쓴다.`
+        : "",
+    ].filter(Boolean);
+    console.warn(`재시도 사유: ${requests.join(" ")}`);
+    feedback = `\n\n[수정 요청] 직전 출력에서 ${requests.join(" ")}\n나머지는 같은 내용으로 다시 작성하라.`;
   }
 
   if (!best) throw new Error("요약 결과를 만들지 못했습니다.");

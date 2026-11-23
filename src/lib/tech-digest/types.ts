@@ -12,6 +12,7 @@ export type DigestItem = {
 };
 
 // LLM 에 넘기는 후보. id 는 LLM 이 고른 항목을 코드가 다시 찾는 열쇠다.
-export type Candidate = Omit<DigestItem, "pubDate" | "categories"> & { id: number };
+// needsNote: 독자가 모르는 기술을 다룬 이슈라 LLM 이 배경 설명(note)을 붙여야 하는가.
+export type Candidate = Omit<DigestItem, "pubDate" | "categories"> & { id: number; needsNote: boolean };
 
 export const BODY_LIMIT = 1500;

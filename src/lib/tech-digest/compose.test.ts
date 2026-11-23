@@ -6,6 +6,7 @@ import {
   composeDigest,
   filterOpenRouterModels,
   findBannedPhrases,
+  findMissingNotes,
   MIN_LAST_WEEK_TOKENS,
   parseLlmOutput,
   renderNumbersSection,
@@ -13,7 +14,7 @@ import {
 import type { Candidate } from "./types";
 
 const body = "Next.js 16.5 에서 turbopack 캐시가 디스크에 저장됩니다. 재시작 시간이 줄어듭니다.";
-const item = (id: number) => ({ id, title: `항목 ${id}`, body, reason: "실무 영향" });
+const item = (id: number) => ({ id, title: `항목 ${id}`, body, note: "", reason: "실무 영향" });
 const llm = (items: unknown[], extra: Record<string, unknown> = {}) =>
   JSON.stringify({ subtitle: "Next.js 16.5와 TypeScript 7", highlights: ["하나", "둘", "셋"], items, repos: [], stack: [], ...extra });
 // 이슈 섹션에 들어갈 수 있는 article 후보들
@@ -73,6 +74,18 @@ describe("parseLlmOutput", () => {
   });
 });
 
+describe("findMissingNotes", () => {
+  test("설명이 필요한 후보를 골랐는데 note 가 비면 그 제목을 돌려준다", () => {
+    const output = { items: [item(1), item(2), { ...item(3), note: "Nginx: 웹 서버입니다." }] };
+    const candidates = [
+      { id: 1, needsNote: true },
+      { id: 2, needsNote: false },
+      { id: 3, needsNote: true },
+    ];
+    expect(findMissingNotes(output, candidates)).toEqual(["항목 1"]);
+  });
+});
+
 describe("findBannedPhrases", () => {
   const base = { subtitle: "Next.js 16.5", highlights: ["하나"], items: [item(1)], repos: [], stack: null };
   test("깨끗한 글은 빈 배열", () => {
@@ -97,6 +110,9 @@ describe("findBannedPhrases", () => {
       stack: { ...item(3), title: "다양한 쓰임새" },
     });
     expect(found).toEqual(expect.arrayContaining(["혁신적", "다양한"]));
+  });
+  test("배경 설명의 금지 표현도 찾는다", () => {
+    expect(findBannedPhrases({ ...base, items: [{ ...item(1), note: "Ghostty: 강력한 터미널" }] })).toEqual(["강력한"]);
   });
   test("코드의 !== 는 감탄부호로 보지 않는다", () => {
     expect(findBannedPhrases({ ...base, items: [{ ...item(1), body: "a !== b 비교를 씁니다. " + body }] })).toEqual([]);
@@ -134,13 +150,31 @@ describe("숫자 표", () => {
 
 describe("조립", () => {
   const candidates: Candidate[] = [
-    { id: 1, kind: "release", source: "vercel/next.js 릴리스", title: "v16.5.0", link: "https://github.com/vercel/next.js/releases/tag/v16.5.0", body: "" },
-    { id: 2, kind: "article", source: "Simon Willison", title: "글", link: "https://simonwillison.net/x", body: "" },
+    { id: 1, kind: "release", source: "vercel/next.js 릴리스", title: "v16.5.0", link: "https://github.com/vercel/next.js/releases/tag/v16.5.0", body: "", needsNote: false },
+    { id: 2, kind: "article", source: "Simon Willison", title: "글", link: "https://simonwillison.net/x", body: "", needsNote: false },
   ];
   const output = parseLlmOutput(llm([item(1), item(2)]), articles(1, 2));
 
-  test("제목은 기존 형식 '이번 주 AI 테크뉴스 - 부제'", () => {
-    expect(buildTitle("부제")).toBe("이번 주 AI 테크뉴스 - 부제");
+  test("제목은 '이번 주 테크뉴스 - 부제'(주제를 AI 로 한정하지 않는다)", () => {
+    expect(buildTitle("부제")).toBe("이번 주 테크뉴스 - 부제");
+  });
+
+  test("배경 설명은 본문 아래·원문 링크 위에 인용 블록으로 붙는다", () => {
+    const withNote = parseLlmOutput(
+      llm([item(1), { ...item(2), note: "Ghostty: 터미널 에뮬레이터입니다.\nGPU로 화면을 그립니다." }]),
+      articles(1, 2),
+    );
+    const { content } = composeDigest({
+      output: withNote,
+      candidates,
+      hfModels: [],
+      openRouterModels: [],
+      failedSources: [],
+      bannedLeft: [],
+    });
+    expect(content).toContain(`${body}\n\n> Ghostty: 터미널 에뮬레이터입니다.\n> GPU로 화면을 그립니다.\n\n원문: [Simon Willison]`);
+    // 설명이 빈 항목에는 인용 블록을 만들지 않는다
+    expect(content).toContain(`${body}\n\n원문: [vercel/next.js 릴리스]`);
   });
 
   test("본문 순서: 메모 → 하이라이트 → 항목(+원문 링크) → 숫자 표", () => {
@@ -164,8 +198,8 @@ describe("조립", () => {
   test("레포·스택 섹션은 이슈 뒤, 숫자 표 앞에 붙고 비면 만들지 않는다", () => {
     const all: Candidate[] = [
       ...candidates,
-      { id: 3, kind: "repo", source: "GitHub 급상승 레포", title: "a/b", link: "https://github.com/a/b", body: "" },
-      { id: 4, kind: "stack", source: "FastAPI", title: "FastAPI", link: "https://github.com/fastapi/fastapi", body: "" },
+      { id: 3, kind: "repo", source: "GitHub 급상승 레포", title: "a/b", link: "https://github.com/a/b", body: "", needsNote: false },
+      { id: 4, kind: "stack", source: "FastAPI", title: "FastAPI", link: "https://github.com/fastapi/fastapi", body: "", needsNote: false },
     ];
     const withExtras = parseLlmOutput(
       llm([item(1), item(2)], { repos: [item(3)], stack: [item(4)] }),
